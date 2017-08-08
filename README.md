@@ -15,7 +15,7 @@ Add the following line to the end of .storybook/config.js:
 
     if (typeof window === 'object') window.__storybook_stories__ = require('@storybook/react').getStorybook();
     
-Create configuration file in your project directory `applitools.config.js` (more options available, see [defaultConfig.js](src/defaultConfig.js)):
+Create configuration file in your project directory `applitools.config.js` (more options available, see [defaultConfigs.js](src/defaultConfigs.js)):
 
     module.exports = {
         apiKey: process.env.APPLITOOLS_API_KEY,
