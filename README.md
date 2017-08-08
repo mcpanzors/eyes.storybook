@@ -8,10 +8,12 @@ Install eyes.storybook as a local dev dependency in your tested project:
     npm install --save-dev eyes.storybook
     
 Add the following line to the end of .storybook/config.js:
-#####Storybook v2:
+
+**Storybook v2:**
 
     if (typeof window === 'object') window.__storybook_stories__ = require('@kadira/storybook').getStorybook();
-#####Storybook v3:
+
+**Storybook v3:**
 
     if (typeof window === 'object') window.__storybook_stories__ = require('@storybook/react').getStorybook();
     
