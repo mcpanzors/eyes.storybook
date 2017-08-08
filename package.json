@@ -1,0 +1,37 @@
+{
+    "name": "eyes.storybook",
+    "version": "0.0.1",
+    "description": "Applitools Eyes SDK For Storybook",
+    "author": "Applitools Team <team@applitools.com> (http://www.applitools.com/)",
+    "keywords": [
+        "eyes.storybook",
+        "Test Automation",
+        "Visual Regression",
+        "Applitools",
+        "Eyes",
+        "testing",
+        "storybook",
+        "react",
+        "vue"
+    ],
+    "homepage": "http://www.applitools.com/",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/applitools/eyes.storybook.git"
+    },
+    "license": "Apache-2.0",
+    "bin": {
+        "eyes-storybook": "./bin/eyes-storybook.js"
+    },
+    "dependencies": {
+        "eyes.selenium": "0.0.69",
+        "selenium-webdriver": "^3.0.0",
+        "request": "^2.80.0",
+        "yargs": "^8.0.2",
+        "jsdom": "^11.1.0",
+        "colors": "^1.1.2"
+    },
+    "engines": {
+        "node": ">=6.9.0"
+    }
+}
