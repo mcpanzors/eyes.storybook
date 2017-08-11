@@ -10,7 +10,7 @@ const spawn = require('child_process').spawn;
 class StorybookUtils {
 
     static startServer(configs) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const isWindows = (os.platform() === 'win32');
             let storybookPath = path.resolve(process.cwd(), 'node_modules/.bin/start-storybook' + (isWindows ? '.cmd' : ''));
 
@@ -130,15 +130,17 @@ class StorybookUtils {
     /**
      * @param {string} storybookAddress
      * @param {object} storybook
-     * @returns {Array<{title: string, url: string}>}
+     * @returns {Array<{groupName: string, storyName: string, storyUrl: string, compoundTitle: string}>}
      */
     static prepareStories(storybookAddress, storybook) {
         const stories = [];
         for (const group of storybook) {
             for (const story of group.stories) {
-                const title = group.kind + ': ' + story.name;
-                const storyUrl = storybookAddress + 'iframe.html?selectedKind=' + encodeURIComponent(group.kind) + '&selectedStory=' + encodeURIComponent(story.name);
-                stories.push({title, storyUrl});
+                const groupName = group.kind;
+                const storyName = story.name;
+                const storyUrl = storybookAddress + 'iframe.html?selectedKind=' + encodeURIComponent(groupName) + '&selectedStory=' + encodeURIComponent(storyName);
+                const compoundTitle = groupName + ': ' + storyName;
+                stories.push({groupName, storyName, storyUrl, compoundTitle});
             }
         }
 

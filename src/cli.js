@@ -6,11 +6,9 @@ const colors = require('colors/safe');
 
 const defaultConfigs = require('./defaultConfigs');
 const {StorybookUtils} = require('./storybook');
-const {EyesSelenium} = require('./selenium');
+const {EyesStorybook} = require('./eyes-storybook');
 
 const VERSION = require('../package.json').version;
-
-let promise = Promise.resolve();
 
 let yargs = require('yargs')
     .usage('Usage: $0 --conf applitools.config.js')
@@ -41,15 +39,12 @@ let yargs = require('yargs')
     .argv;
 
 if (yargs.help) {
-    return promise.then(() => {
-        yargs.showHelp();
-    });
+    yargs.showHelp();
 }
 
 if (yargs.version) {
-    return promise.then(() => {
-        console.log('Version: ' + VERSION);
-    });
+    console.log('Version: ' + VERSION);
+    return;
 }
 
 const configsPath = path.resolve(process.cwd(), yargs.conf);
@@ -66,6 +61,7 @@ if (!configs.apiKey) {
 
 let storybookAddress, storybookProcess;
 
+let promise = Promise.resolve();
 if (!configs.storybookAddress) {
     promise = promise.then(() => {
         console.log('Starting Storybook server...');
@@ -95,12 +91,24 @@ promise = promise.then(() => {
 }).then((stories) => {
     console.log('Initializing webdriver...');
 
-    const selenium = new EyesSelenium(configs);
-    return selenium.testStories(stories).then((results) => {
-        console.log(colors.green("[EYES: TEST PASSED]: See details at", results.appUrls.session));
-    }, (results) => {
-        console.error(results.message);
-    });
+    const eyes = new EyesStorybook(configs);
+    console.log("Initialization finished, capturing screenshots...");
+    return eyes.testStories(stories);
+}).then((results) => {
+    if (results.length > 0) {
+        console.log('\n');
+        console.log('[EYES: TEST RESULTS]:');
+        results.forEach((result) => {
+            if (result.isPassed) {
+                console.log(result.name, ' - ', colors.green("Passed"));
+            } else {
+                console.log(result.name, ' - ', colors.red("Failed " + result.failedSteps + " of " + result.totalSteps));
+            }
+        });
+        console.log("See details at", results[0].batchUrl);
+    } else {
+        console.log("Test is finished but no results returned. Run with --debug flag to see more logs.");
+    }
 });
 
 return promise;

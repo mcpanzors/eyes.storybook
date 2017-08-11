@@ -24,7 +24,8 @@
         "eyes-storybook": "./bin/eyes-storybook.js"
     },
     "dependencies": {
-        "eyes.selenium": "0.0.69",
+        "eyes.sdk": "0.0.62",
+        "eyes.utils": "0.0.25",
         "selenium-webdriver": "^3.0.0",
         "request": "^2.80.0",
         "yargs": "^8.0.2",

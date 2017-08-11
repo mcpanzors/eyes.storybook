@@ -1,7 +1,6 @@
 module.exports = {
     apiKey: null,
     appName: 'My Storybook Application',
-    testName: 'My Storybook Test',
     viewportSize: {width: 800, height: 600},
 
     storybookAddress: null,

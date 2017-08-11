@@ -22,7 +22,6 @@ Create configuration file called `applitools.config.js` in your project director
     module.exports = {
         apiKey: process.env.APPLITOOLS_API_KEY,
         appName: 'My Storybook Application',
-        testName: 'My Storybook Test',
         viewportSize: {width: 1000, height: 600},
 
         seleniumAddress: 'http://localhost:4444/wd/hub',
