@@ -9,8 +9,8 @@ const spawn = require('child_process').spawn;
 
 class StorybookUtils {
 
-    static startServer(configs) {
-        return new Promise((resolve) => {
+    static startServer(configs, logger) {
+        return new Promise((resolve, reject) => {
             const isWindows = (os.platform() === 'win32');
             let storybookPath = path.resolve(process.cwd(), 'node_modules/.bin/start-storybook' + (isWindows ? '.cmd' : ''));
 
@@ -18,28 +18,37 @@ class StorybookUtils {
             let storybookPort = 9001;
             if (configs.storybookPort) {
                 storybookPort = configs.storybookPort;
-                console.log('Use custom Storybook port: ' + storybookPort);
+                logger.log('Use custom Storybook port: ' + storybookPort);
             }
 
-            const args = ['--port', storybookPort];
-
-            if (configs.storybookConfigDir) {
-                args.push('--config-dir');
-                args.push(configs.storybookConfigDir);
-                console.log('Use custom Storybook configDir: ' + configs.storybookConfigDir);
-            }
+            const args = ['--port', storybookPort, '--config-dir', configs.storybookConfigDir];
 
             if (configs.storybookStaticDir) {
                 args.push('--static-dir');
                 args.push(configs.storybookStaticDir);
-                console.log('Use custom Storybook staticDir: ' + configs.storybookStaticDir);
+                logger.log('Use custom Storybook staticDir: ' + configs.storybookStaticDir);
             }
 
-            console.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
+            const storybookConfigPath = path.resolve(process.cwd(), configs.storybookConfigDir, 'config.js');
+            if (!fs.existsSync(storybookConfigPath)) {
+                return reject(new Error('Storybook config file not found: ' + storybookConfigPath));
+            }
+
+            const storybookConfigBody = fs.readFileSync(storybookConfigPath, 'utf8');
+            if (!storybookConfigBody.includes("__storybook_stories__")) {
+                const newStorybookConfig = storybookConfigBody + "\nif (typeof window === 'object') {\n  window.__storybook_stories__ = require('" + (configs.storybookVersion === 3 ? '@storybook/' + configs.storybookApp : '@kadira/storybook') + "').getStorybook();\n}";
+                fs.writeFileSync(storybookConfigPath, newStorybookConfig, 'utf8');
+            }
+
+            logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
             const storybookProcess = spawn(storybookPath, args, {detached: true});
 
             // exit on terminate
-            process.on('exit', function() {
+            process.on('exit', function () {
+                if (fs.readFileSync(storybookConfigPath, 'utf8') !== storybookConfigBody) {
+                    fs.writeFileSync(storybookConfigPath, storybookConfigBody, 'utf8');
+                }
+
                 try {
                     process.kill(-storybookProcess.pid);
                 } catch (e) {}
@@ -47,7 +56,7 @@ class StorybookUtils {
             process.on('SIGINT', function () {
                 process.exit();
             });
-            process.on('uncaughtException', function(e) {
+            process.on('uncaughtException', function (e) {
                 console.error('An error during staring Storebook', e);
                 process.exit(1);
             });
@@ -73,7 +82,7 @@ class StorybookUtils {
                 retries = 2; // this and 2 additionally
             }
 
-            request.get(storybookAddress + 'static/preview.bundle.js', function(err, response, body) {
+            request.get(storybookAddress + 'static/preview.bundle.js', function (err, response, body) {
                 if (err || response.statusCode !== 200 || !body) {
                     setTimeout(() => {
                         return that.getStorybookPreviewBundle(storybookAddress, retries).then((body) => {
@@ -130,21 +139,56 @@ class StorybookUtils {
     /**
      * @param {string} storybookAddress
      * @param {object} storybook
-     * @returns {Array<{groupName: string, storyName: string, storyUrl: string, compoundTitle: string}>}
+     * @returns {Array<{componentName: string, state: string, url: string, compoundTitle: string}>}
      */
     static prepareStories(storybookAddress, storybook) {
         const stories = [];
         for (const group of storybook) {
             for (const story of group.stories) {
-                const groupName = group.kind;
-                const storyName = story.name;
-                const storyUrl = storybookAddress + 'iframe.html?selectedKind=' + encodeURIComponent(groupName) + '&selectedStory=' + encodeURIComponent(storyName);
-                const compoundTitle = groupName + ': ' + storyName;
-                stories.push({groupName, storyName, storyUrl, compoundTitle});
+                const componentName = group.kind;
+                const state = story.name;
+                const compoundTitle = componentName + ': ' + state;
+                const url = storybookAddress + 'iframe.html?selectedKind=' + encodeURIComponent(componentName) + '&selectedStory=' + encodeURIComponent(state);
+                stories.push({componentName, state, compoundTitle, url});
             }
         }
 
         return stories;
+    }
+
+    /**
+     * @param {Array<{componentName: string, state: string, url: string, compoundTitle: string}>} stories
+     * @param {Array<{width: number, height: number}>} viewportSizes
+     * @returns {Array<{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}>}
+     */
+    static mixStories(stories, viewportSizes) {
+        const newStories = [];
+        for (const viewportSize of viewportSizes) {
+            for (const story of stories) {
+                newStories.push(Object.assign(story, {viewportSize}));
+            }
+        }
+
+        return newStories;
+    }
+
+    /**
+     * @param {object} json
+     * @returns {{ app: string, version: number}}
+     */
+    static retrieveStorybookVersion(json) {
+        const dependencies = json.dependencies || {};
+        const devDependencies = json.devDependencies || {};
+
+        if (dependencies['@kadira/storybook'] || devDependencies['@kadira/storybook']) {
+            return {app: 'react', version: 2};
+        } else if (dependencies['@storybook/react'] || devDependencies['@storybook/react']) {
+            return {app: 'react', version: 3};
+        } else if (dependencies['@storybook/vue'] || devDependencies['@storybook/vue']) {
+            return {app: 'vue', version: 3};
+        } else {
+            throw new Error('Storybook module not found in package.json!');
+        }
     }
 }
 

@@ -7,15 +7,17 @@ const {Eyes} = require('./eyes');
 
 class EyesStorybook {
 
-    constructor(configs) {
-        this.configs = configs;
+    constructor(configs, testBatch, logger) {
+        this._configs = configs;
+        this._testBatch = testBatch;
+        this._logger = logger;
 
         const builder = new Builder();
-        builder.usingServer(this.configs.seleniumAddress);
-        if (this.configs.capabilities && Object.keys(this.configs.capabilities).length) {
-            for (const key in this.configs.capabilities) {
-                if (this.configs.capabilities.hasOwnProperty(key)) {
-                    builder.getCapabilities().set(key, this.configs.capabilities[key]);
+        builder.usingServer(this._configs.seleniumAddress);
+        if (this._configs.capabilities && Object.keys(this._configs.capabilities).length) {
+            for (const key in this._configs.capabilities) {
+                if (this._configs.capabilities.hasOwnProperty(key)) {
+                    builder.getCapabilities().set(key, this._configs.capabilities[key]);
                 }
             }
         }
@@ -25,110 +27,102 @@ class EyesStorybook {
         this._promiseFactory = new PromiseFactory((asyncAction) => {
             return new Promise(asyncAction);
         }, null);
-
-        this._sessions = {};
-        this._testBatch = SeleniumUtils.createTestBatch(this.configs.appName);
     }
 
     /**
-     * @param {{groupName: string, storyName: string, storyUrl: string, compoundTitle: string}[]} stories
+     * @param {{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}[]} stories
      * @returns {Promise.<{name: string, isPassed: string, totalSteps: string, failedSteps: string, batchUrl: string}[]>}
      */
     testStories(stories) {
-        const that = this;
+        const that = this, globalResults = [], globalPromises = [];
 
-        let scaleProviderFactory;
-        let promise = Promise.resolve(), results = [];
-        if (that.configs.viewportSize && that.configs.viewportSize.width && that.configs.viewportSize.height) {
-            promise = promise.then(() => {
-                return SeleniumUtils.setViewportSize(that._driver, that.configs.viewportSize);
-            });
-        }
-
-        promise = promise.then(() => {
-            return SeleniumUtils.updateScalingParams(that._driver).then((result) => {
-                scaleProviderFactory = result;
-            });
-        });
-
-        return promise.then(() => {
-            const promises = [];
+        return Promise.resolve().then(() => {
+            return SeleniumUtils.updateScalingParams(that._driver);
+        }).then((scaleProviderFactory) => {
+            let testPromise = Promise.resolve();
             stories.forEach((story) => {
-                const storyPromise = that.getScreenshotOfStory(story, scaleProviderFactory).then((screenshot) => {
-                    const eyes = that.getEyesSession(story.groupName);
-                    return eyes.checkImage(screenshot, story.compoundTitle);
+                testPromise = testPromise.then(() => {
+                    return new Promise((resolve) => {
+                        globalPromises.push(that.testStory(story, scaleProviderFactory, () => {
+                            resolve();
+                        }).then((results) => {
+                            globalResults.push(results);
+                        }));
+                    });
                 });
-
-                promises.push(storyPromise);
             });
 
-            return Promise.all(promises);
+            return testPromise;
         }).then(() => {
-            console.log("All screenshots captured, waiting results from Applitools...");
-            const promises = [];
-            Object.keys(that._sessions).forEach(function(key) {
-                const eyesPromise = that._sessions[key].close().then((sessionResults) => {
-                    pushToResults(sessionResults);
-                    //console.log("[EYES: TEST PASSED]: See details at", sessionResults.appUrls.session);
-                }, (error) => {
-                    pushToResults(error.results);
-                    //console.error(error.message);
-                });
-
-                promises.push(eyesPromise);
-            });
-
-            return Promise.all(promises)
+            return Promise.all(globalPromises);
         }).then(() => {
-            return results;
+            return globalResults;
         });
-
-        function pushToResults(sessionResults) {
-            results.push({
-                name: sessionResults.name,
-                isPassed: sessionResults.isPassed,
-                totalSteps: sessionResults.steps,
-                failedSteps: sessionResults.mismatches + sessionResults.missing,
-                batchUrl: sessionResults.appUrls.batch
-            });
-        }
     }
 
+    /**
+     * @param {{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}} story
+     * @param {Object} scaleProviderFactory
+     * @param {function} startNextCallback
+     * @returns {Promise.<{name: string, isPassed: string, totalSteps: string, failedSteps: string, batchUrl: string}[]>}
+     */
+    testStory(story, scaleProviderFactory, startNextCallback) {
+        const that = this;
 
+        let eyes;
+        return Promise.resolve().then(() => {
+            return that.getScreenshotOfStory(story, scaleProviderFactory);
+        }).then((screenshot) => {
+            startNextCallback();
+
+            return screenshot;
+        }).then((screenshot) => {
+            eyes = new Eyes(that._promiseFactory);
+            eyes.setApiKey(that._configs.apiKey);
+            eyes.setBatch(that._testBatch);
+            eyes.addProperty("Component name", story.componentName);
+            eyes.addProperty("State", story.state);
+            eyes.open(that._configs.appName, story.compoundTitle);
+
+            return eyes.checkImage(screenshot, story.compoundTitle);
+        }).then(() => {
+            // logger.log("All screenshots captured, waiting results from Applitools...");
+            return eyes.close().catch((error) => {
+                return error.results;
+            });
+        }).then((results) => {
+            return {
+                name: results.name,
+                isPassed: results.isPassed,
+                totalSteps: results.steps,
+                failedSteps: results.mismatches + results.missing,
+                batchUrl: results.appUrls.batch
+            };
+        });
+    }
 
     /**
-     * @param {{groupName: string, storyName: string, storyUrl: string, compoundTitle: string}} story
+     * @param {{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}} story
      * @param scaleProviderFactory
      * @returns {Promise.<MutableImage>}
      */
     getScreenshotOfStory(story, scaleProviderFactory) {
+        if (story.viewportSize) {
+            this._logger.verbose("Setting viewport size of '" + story.compoundTitle + "'...");
+            SeleniumUtils.setViewportSize(this._driver, story.viewportSize);
+        }
+
+        this._logger.verbose("Opening url of '" + story.compoundTitle + "'...");
+        this._driver.get(story.url);
+
         const that = this;
-
-        that._driver.get(story.storyUrl);
-
-        return that._driver.controlFlow().execute(() => {
-            console.log("Capturing screenshot of '" + story.compoundTitle + "'...");
+        return this._driver.controlFlow().execute(() => {
+            that._logger.verbose("Capturing screenshot of '" + story.compoundTitle + "'...");
             return SeleniumUtils.getScreenshot(that._driver, scaleProviderFactory, that._promiseFactory).then((screenshot) => {
-                console.log("Capturing screenshot of '" + story.compoundTitle + "' done.");
+                that._logger.verbose("Capturing screenshot of '" + story.compoundTitle + "' done.");
                 return screenshot;
             });
         });
-    }
-
-    /**
-     * @param {string} groupName
-     * @returns {Eyes}
-     */
-    getEyesSession(groupName) {
-        if (!this._sessions[groupName]) {
-            const eyes = new Eyes(this._promiseFactory);
-            eyes.setApiKey(this.configs.apiKey);
-            eyes.setBatch(this._testBatch);
-            eyes.open(this.configs.appName, groupName);
-            this._sessions[groupName] = eyes;
-        }
-
-        return this._sessions[groupName];
     }
 }
 

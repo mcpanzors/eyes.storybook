@@ -286,7 +286,6 @@ class SeleniumUtils {
             scaleProvider = scaleProviderFactory.getScaleProvider(imageSize.width);
             if (scaleProvider && scaleProvider.getScaleRatio() !== 1) {
                 let scaleRatio = scaleProvider.getScaleRatio();
-                console.log("Using scale ratio: " + scaleRatio);
                 return parsedImage.scaleImage(scaleRatio);
             }
         }).then(() => {

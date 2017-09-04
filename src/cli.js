@@ -3,9 +3,11 @@
 const fs = require('fs');
 const path = require('path');
 const colors = require('colors/safe');
+const {Logger, ConsoleLogHandler} = require('eyes.sdk');
 
 const defaultConfigs = require('./defaultConfigs');
 const {StorybookUtils} = require('./storybook');
+const {SeleniumUtils} = require('./selenium');
 const {EyesStorybook} = require('./eyes-storybook');
 
 const VERSION = require('../package.json').version;
@@ -43,71 +45,134 @@ if (yargs.help) {
 }
 
 if (yargs.version) {
-    console.log('Version: ' + VERSION);
+    process.stdout.write(`Version ${VERSION}\n`);
     return;
 }
 
+const logger = new Logger();
+logger.setLogHandler(new ConsoleLogHandler(yargs.debug));
+
+let configs, storybookAddress, storybookProcess;
 const configsPath = path.resolve(process.cwd(), yargs.conf);
-if (!fs.existsSync(configsPath)) {
+if (fs.existsSync(configsPath)) {
+    logger.log('Loading configuration from "' + configsPath + '"...');
+    configs = Object.assign(defaultConfigs, require(configsPath));
+} else if (yargs.conf !== yargs.option('conf').default) {
     throw new Error('Config file cannot be found in "' + configsPath + '".');
+} else {
+    configs = defaultConfigs;
 }
 
-// load configs from file and merge with defaults
-let configs = require(configsPath);
-configs = Object.assign(defaultConfigs, configs);
+if (configs.storybookApp && !['react', 'vue'].includes(configs.storybookApp)) {
+    throw new Error('storybookApp should be "react" or "vue".');
+}
+
+if (configs.storybookVersion && ![2, 3].includes(configs.storybookVersion)) {
+    throw new Error('storybookVersion should be 2 or 3.');
+}
+
+const packageJsonPath = process.cwd() + '/package.json';
+if (!fs.existsSync(packageJsonPath)) {
+    throw new Error('package.json not found on path: ' + packageJsonPath);
+}
+const packageJson = require(packageJsonPath);
+const packageVersion = StorybookUtils.retrieveStorybookVersion(packageJson);
+if (!configs.appName) {
+    configs.appName = packageJson.name;
+}
+if (!configs.storybookApp) {
+    configs.storybookApp = packageVersion.app;
+}
+if (!configs.storybookVersion) {
+    configs.storybookVersion = packageVersion.version;
+}
+
 if (!configs.apiKey) {
-    throw new Error('The Applitools API Key is missing. Please add it to your configuration file.');
+    throw new Error('The Applitools API Key is missing. Please add it to your configuration file or set ENV key.');
 }
 
-let storybookAddress, storybookProcess;
+if (!configs.maxRunningBrowsers) {
+    throw new Error("maxRunningBrowsers should be defined and at least 1.");
+}
+
+if (configs.viewportSize) {
+    if (!Array.isArray(configs.viewportSize)) {
+        configs.viewportSize = [configs.viewportSize];
+    }
+
+    for (let i = 0, l = configs.viewportSize.length; i < l; ++i) {
+        if (!configs.viewportSize[i].width || !configs.viewportSize[i].height) {
+            throw new Error("ViewportSize object should contains width and height properties.");
+        }
+    }
+}
 
 let promise = Promise.resolve();
 if (!configs.storybookAddress) {
     promise = promise.then(() => {
-        console.log('Starting Storybook server...');
+        logger.log('Starting Storybook server...');
 
-        return StorybookUtils.startServer(configs).then((process) => {
+        return StorybookUtils.startServer(configs, logger).then((process) => {
             storybookProcess = process;
             storybookAddress = 'http://localhost:' + configs.storybookPort + '/';
         });
     });
 } else {
-    console.log('You set Storybook url, starting server skipped.');
+    logger.log('You set Storybook url, starting server skipped.');
     storybookAddress = configs.storybookAddress.endsWith('/') ? configs.storybookAddress : configs.storybookAddress + '/';
 }
 
+function testStories(stories, testBatch) {
+    return Promise.resolve().then(() => {
+        const eyes = new EyesStorybook(configs, testBatch, logger);
+        return eyes.testStories(stories);
+    });
+}
+
 promise = promise.then(() => {
-    console.log('Getting storybook preview code...');
+    logger.log('Getting stories from storybook instance...');
 
-    return StorybookUtils.getStorybookPreviewBundle(storybookAddress);
-}).then((previewCode) => {
-    console.log('Preparing Storybook DOM...');
-
-    return StorybookUtils.getStorybook(previewCode, configs);
+    return StorybookUtils.getStorybookPreviewBundle(storybookAddress).then((previewCode) => {
+        return StorybookUtils.getStorybook(previewCode, configs);
+    });
 }).then((storybook) => {
-    console.log('Retrieving stories...');
+    logger.log('Preparing stories...');
 
-    return StorybookUtils.prepareStories(storybookAddress, storybook);
+    const stories = StorybookUtils.prepareStories(storybookAddress, storybook);
+    return StorybookUtils.mixStories(stories, configs.viewportSize);
 }).then((stories) => {
-    console.log('Initializing webdriver...');
+    logger.log('Initializing webdrivers...');
+    const testBatch = SeleniumUtils.createTestBatch(configs.appName);
 
-    const eyes = new EyesStorybook(configs);
-    console.log("Initialization finished, capturing screenshots...");
-    return eyes.testStories(stories);
+    const browsersCount = stories.length > configs.maxRunningBrowsers ? configs.maxRunningBrowsers : stories.length;
+    let storiesMod = stories.length % browsersCount;
+    const storiesPerBrowser = (stories.length - storiesMod) / browsersCount;
+
+    let startStory, endStory = 0;
+    const browsers = new Array(browsersCount);
+    for (let i = 0; i < browsersCount; ++i) {
+        startStory = endStory;
+        endStory = startStory + storiesPerBrowser + (storiesMod-- > 0 ? 1 : 0);
+        browsers[i] = testStories(stories.slice(startStory, endStory), testBatch);
+    }
+
+    return Promise.all(browsers);
 }).then((results) => {
+    results = [].concat.apply([], results);
+
     if (results.length > 0) {
-        console.log('\n');
-        console.log('[EYES: TEST RESULTS]:');
+        logger.log('\n');
+        logger.log('[EYES: TEST RESULTS]:');
         results.forEach((result) => {
             if (result.isPassed) {
-                console.log(result.name, ' - ', colors.green("Passed"));
+                logger.log(result.name, ' - ', colors.green("Passed"));
             } else {
-                console.log(result.name, ' - ', colors.red("Failed " + result.failedSteps + " of " + result.totalSteps));
+                logger.log(result.name, ' - ', colors.red("Failed " + result.failedSteps + " of " + result.totalSteps));
             }
         });
-        console.log("See details at", results[0].batchUrl);
+        logger.log("See details at", results[0].batchUrl);
     } else {
-        console.log("Test is finished but no results returned. Run with --debug flag to see more logs.");
+        logger.log("Test is finished but no results returned. Run with --debug flag to see more logs.");
     }
 });
 
