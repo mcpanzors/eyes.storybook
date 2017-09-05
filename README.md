@@ -3,26 +3,41 @@
 Applitools Eyes SDK For Storybook
 ## Installation
 
+Add your Applitools API key to your environment variables as `APPLITOOLS_API_KEY`
+
 Install eyes.storybook as a local dev dependency in your tested project:
 
-    npm install --save-dev eyes.storybook
-    
-Add the following line to the end of .storybook/config.js:
+    npm install --save-dev eyes.storybook 
 
-**Storybook v2:**
+Open your package.json, and add a script:
 
-    if (typeof window === 'object') window.__storybook_stories__ = require('@kadira/storybook').getStorybook();
+    "eyes-storybook": "eyes-storybook"
 
-**Storybook v3:**
+## Usage
 
-    if (typeof window === 'object') window.__storybook_stories__ = require('@storybook/react').getStorybook();
-    
-Create configuration file called `applitools.config.js` in your project directory (more options available, see [defaultConfigs.js](src/defaultConfigs.js)):
+When your project is setup, you can run a test with the following command:
+
+```
+$ npm run eyes-storybook
+```
+
+## Advanced configuration
+
+To change browser, viewport sizes or something else, you can use configuration file.
+
+Create configuration file called `applitools.config.js` in your project directory (the name can be changed using command argument, e.g. `--conf applitools.config.js`).
+
+The default values and all available options, you can find in [defaultConfigs.js](src/defaultConfigs.js)
+
+Common example:
 
     module.exports = {
-        apiKey: process.env.APPLITOOLS_API_KEY,
         appName: 'My Storybook Application',
-        viewportSize: {width: 1000, height: 600},
+        viewportSize: [
+            {width: 1000, height: 600}
+        ],
+        
+        maxRunningBrowsers: 5,
 
         seleniumAddress: 'http://localhost:4444/wd/hub',
         capabilities: {
@@ -33,18 +48,23 @@ Create configuration file called `applitools.config.js` in your project director
         },
     };
 
-Open your package.json, and add a script:
+---
 
-    "eyes-storybook": "eyes-storybook --conf applitools.config.js"
+If you would like to run storybook server out of the eyes-storybook execution, you should specify `storybookAddress` option in your `applitools.config.js` file and add the following line to the end of `.storybook/config.js`:
 
+**Storybook v2:**
 
-## Usage
+    if (typeof window === 'object') window.__storybook_stories__ = require('@kadira/storybook').getStorybook();
 
-When your project is setup, you can run a test with the following command:
+**Storybook v3 - React:**
 
-```
-$ npm run eyes-storybook
-```
+    if (typeof window === 'object') window.__storybook_stories__ = require('@storybook/react').getStorybook();
+
+**Storybook v3 - Vue.js:**
+
+    if (typeof window === 'object') window.__storybook_stories__ = require('@storybook/vue').getStorybook();
+
+---
 
 Please check the applitools website for more instructions:
 
