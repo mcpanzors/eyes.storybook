@@ -162,19 +162,30 @@ promise = promise.then(() => {
     results = [].concat.apply([], results);
 
     if (results.length > 0) {
-        logger.log('\n');
-        logger.log('[EYES: TEST RESULTS]:');
+        console.log('\n');
+        console.log('[EYES: TEST RESULTS]:');
         results.forEach((result) => {
             if (result.isPassed) {
-                logger.log(result.name, ' - ', colors.green("Passed"));
+                console.log(result.name, ' - ', colors.green("Passed"));
             } else {
-                logger.log(result.name, ' - ', colors.red("Failed " + result.failedSteps + " of " + result.totalSteps));
+                console.log(result.name, ' - ', colors.red("Failed " + result.failedSteps + " of " + result.totalSteps));
             }
         });
-        logger.log("See details at", results[0].batchUrl);
+        console.log("See details at", results[0].batchUrl);
     } else {
-        logger.log("Test is finished but no results returned. Run with --debug flag to see more logs.");
+        console.log("Test is finished but no results returned. Run with --debug flag to see more logs.");
     }
+
+    process.exit();
+}).catch(function(err) {
+    if (yargs.debug && err.stack) {
+        console.error('DEBUG:', err.stack);
+    } else {
+        console.error(err.message || err.toString());
+    }
+
+    console.log('Run with --debug flag to see more logs.');
+    process.exit(1);
 });
 
 return promise;
