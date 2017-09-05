@@ -139,7 +139,7 @@ class StorybookUtils {
     /**
      * @param {string} storybookAddress
      * @param {object} storybook
-     * @returns {Array<{componentName: string, state: string, url: string, compoundTitle: string}>}
+     * @returns {Array<{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}>}
      */
     static prepareStories(storybookAddress, storybook) {
         const stories = [];
@@ -149,7 +149,7 @@ class StorybookUtils {
                 const state = story.name;
                 const compoundTitle = componentName + ': ' + state;
                 const url = storybookAddress + 'iframe.html?selectedKind=' + encodeURIComponent(componentName) + '&selectedStory=' + encodeURIComponent(state);
-                stories.push({componentName, state, compoundTitle, url});
+                stories.push({componentName, state, compoundTitle, url, viewportSize: null});
             }
         }
 
@@ -157,11 +157,15 @@ class StorybookUtils {
     }
 
     /**
-     * @param {Array<{componentName: string, state: string, url: string, compoundTitle: string}>} stories
+     * @param {Array<{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}>} stories
      * @param {Array<{width: number, height: number}>} viewportSizes
      * @returns {Array<{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}>}
      */
     static mixStories(stories, viewportSizes) {
+        if (!viewportSizes) {
+            return stories;
+        }
+
         const newStories = [];
         for (const viewportSize of viewportSizes) {
             for (const story of stories) {
