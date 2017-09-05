@@ -11,6 +11,7 @@ const {SeleniumUtils} = require('./selenium');
 const {EyesStorybook} = require('./eyes-storybook');
 
 const VERSION = require('../package.json').version;
+const DEFAULT_CONFIG_PATH = 'applitools.config.js';
 
 let yargs = require('yargs')
     .usage('Usage: $0 --conf applitools.config.js')
@@ -29,7 +30,7 @@ let yargs = require('yargs')
             alias: 'c',
             description: 'Path to Configuration File',
             requiresArg: true,
-            default: 'applitools.config.js'
+            default: DEFAULT_CONFIG_PATH
         },
         debug: {
             alias: 'd',
@@ -57,7 +58,7 @@ const configsPath = path.resolve(process.cwd(), yargs.conf);
 if (fs.existsSync(configsPath)) {
     logger.log('Loading configuration from "' + configsPath + '"...');
     configs = Object.assign(defaultConfigs, require(configsPath));
-} else if (yargs.conf !== yargs.option('conf').default) {
+} else if (yargs.conf !== DEFAULT_CONFIG_PATH) {
     throw new Error('Config file cannot be found in "' + configsPath + '".');
 } else {
     configs = defaultConfigs;
