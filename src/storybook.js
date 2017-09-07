@@ -41,7 +41,7 @@ class StorybookUtils {
             }
 
             logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
-            const storybookProcess = spawn(storybookPath, args, {detached: true});
+            const storybookProcess = spawn(storybookPath, args, {detached: false});
 
             // exit on terminate
             process.on('exit', function () {
@@ -50,6 +50,7 @@ class StorybookUtils {
                 }
 
                 try {
+                    storybookProcess.kill();
                     process.kill(-storybookProcess.pid);
                 } catch (e) {}
             });
