@@ -13,7 +13,10 @@ class EyesStorybook {
         this._logger = logger;
 
         const builder = new Builder();
-        builder.usingServer(this._configs.seleniumAddress);
+        if (this._configs.seleniumAddress) {
+            builder.usingServer(this._configs.seleniumAddress);
+        }
+
         if (this._configs.capabilities && Object.keys(this._configs.capabilities).length) {
             for (const key in this._configs.capabilities) {
                 if (this._configs.capabilities.hasOwnProperty(key)) {

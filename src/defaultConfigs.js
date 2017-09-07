@@ -15,7 +15,7 @@ module.exports = {
 
     maxRunningBrowsers: 5, // can be used multiple in case of headless
 
-    seleniumAddress: 'http://localhost:4444/wd/hub',
+    seleniumAddress: null,
     capabilities: {
         browserName: 'chrome',
         chromeOptions: {
