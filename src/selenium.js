@@ -344,7 +344,7 @@ class SeleniumUtils {
                                     currentPosition = position;
                                 });
                             }).then(() => {
-                                return SeleniumUtils.captureViewport(driver, scaleProviderFactory);
+                                return SeleniumUtils.captureViewport(driver, scaleProviderFactory, promiseFactory);
                             }).then((partImage) => {
                                 return partImage.asObject().then((newImageObjects) => {
                                     parts.push({
