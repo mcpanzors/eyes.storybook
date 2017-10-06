@@ -37,7 +37,7 @@ class EyesStorybook {
      * @returns {Promise.<{name: string, isPassed: string, totalSteps: string, failedSteps: string, batchUrl: string}[]>}
      */
     testStories(stories) {
-        const that = this, globalResults = [], globalPromises = [];
+        const that = this, storiesPromises = [];
 
         return Promise.resolve().then(() => {
             return SeleniumUtils.updateScalingParams(that._driver);
@@ -46,20 +46,17 @@ class EyesStorybook {
             stories.forEach((story) => {
                 testPromise = testPromise.then(() => {
                     return new Promise((resolve) => {
-                        globalPromises.push(that.testStory(story, scaleProviderFactory, () => {
-                            resolve();
-                        }).then((results) => {
-                            globalResults.push(results);
-                        }));
+                        const storyPromise = that.testStory(story, scaleProviderFactory, () => resolve());
+                        storiesPromises.push(storyPromise);
                     });
                 });
             });
 
             return testPromise;
         }).then(() => {
-            return Promise.all(globalPromises);
-        }).then(() => {
-            return globalResults;
+            return Promise.all(storiesPromises);
+        }).then(results => {
+            return that._driver.close().then(() => results);
         });
     }
 
@@ -122,7 +119,7 @@ class EyesStorybook {
         return this._driver.controlFlow().execute(() => {
             that._logger.verbose("Capturing screenshot of '" + story.compoundTitle + "'...");
             return SeleniumUtils.getScreenshot(that._driver, scaleProviderFactory, that._promiseFactory).then((screenshot) => {
-                that._logger.verbose("Capturing screenshot of '" + story.compoundTitle + "' done.");
+                that._logger.log("Capturing screenshot of '" + story.compoundTitle + "' done.");
                 return screenshot;
             });
         });
