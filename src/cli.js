@@ -159,6 +159,7 @@ promise = promise.then(() => {
 
     return Promise.all(browsers);
 }).then((results) => {
+    logger.log('Test finished.');
     results = [].concat.apply([], results);
 
     if (results.length > 0) {
