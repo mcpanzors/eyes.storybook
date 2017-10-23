@@ -1,3 +1,10 @@
 #!/usr/bin/env node
 
-require('../dist/bundle');
+const fs = require('fs');
+
+if (fs.existsSync('../dist/bundle.js')) {
+    require('../dist/bundle');
+} else {
+    require('../src/cli');
+}
+
