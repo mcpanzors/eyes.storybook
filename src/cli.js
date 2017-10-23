@@ -47,7 +47,7 @@ if (yargs.help) {
 
 if (yargs.version) {
     process.stdout.write(`Version ${VERSION}\n`);
-    return;
+    process.exit(1);
 }
 
 const logger = new Logger();
@@ -188,5 +188,3 @@ promise = promise.then(() => {
     console.log('Run with --debug flag to see more logs.');
     process.exit(1);
 });
-
-return promise;
