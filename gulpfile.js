@@ -8,7 +8,11 @@ gulp.task('build', function(){
             mainModule: "cli",
             outputFile: "bundle.js"
         }))
-        .pipe(uglify())
+        .pipe(uglify({
+            ecma: 6,
+            toplevel: true,
+            warnings: true
+        }))
         .pipe(gulp.dest("dist"));
 });
 
