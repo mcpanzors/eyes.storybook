@@ -8,7 +8,7 @@ const {Eyes} = require('./eyes');
 /**
  * @typedef {{width: number, height: number}} RectangleSize
  * @typedef {{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: RectangleSize}} Story
- * @typedef {{name: string, isNew: boolean, isPassed: boolean, totalSteps: number, failedSteps: number, batchUrl: string}} TestStoryResult
+ * @typedef {{story: Story, isNew: boolean, isPassed: boolean, totalSteps: number, failedSteps: number, batchUrl: string}} TestStoryResult
  */
 
 class EyesStorybook {
@@ -104,7 +104,7 @@ class EyesStorybook {
             });
         }).then((results) => {
             return {
-                name: results.name,
+                story: story,
                 isNew: results.isNew,
                 isPassed: results.status === 'Passed',
                 totalSteps: results.steps,
@@ -121,7 +121,7 @@ class EyesStorybook {
      */
     getScreenshotOfStory(story, scaleProviderFactory) {
         if (story.viewportSize) {
-            this._logger.verbose("Setting viewport size of '" + story.compoundTitle + "'...");
+            this._logger.verbose(`Setting viewport size ${EyesStorybook._vsToStr(story.viewportSize)} of '${story.compoundTitle}'...`);
             SeleniumUtils.setViewportSize(this._driver, story.viewportSize);
         }
 
@@ -130,12 +130,16 @@ class EyesStorybook {
 
         const that = this;
         return this._driver.controlFlow().execute(() => {
-            that._logger.verbose("Capturing screenshot of '" + story.compoundTitle + "'...");
+            that._logger.verbose(`Capturing screenshot of '${story.compoundTitle}' ${EyesStorybook._vsToStr(story.viewportSize)}...`);
             return SeleniumUtils.getScreenshot(that._driver, scaleProviderFactory, that._promiseFactory).then((screenshot) => {
-                that._logger.log("Capturing screenshot of '" + story.compoundTitle + "' done.");
+                that._logger.log(`Capturing screenshot of '${story.compoundTitle}' ${EyesStorybook._vsToStr(story.viewportSize)} done.`);
                 return screenshot;
             });
         });
+    }
+
+    static _vsToStr(viewportSize) {
+        return viewportSize ? `[${viewportSize.width}, ${viewportSize.height}]` : '';
     }
 }
 

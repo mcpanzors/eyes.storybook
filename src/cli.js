@@ -167,11 +167,11 @@ promise = promise.then(() => {
         console.log('[EYES: TEST RESULTS]:');
         results.forEach((result) => {
             if (result.isNew) {
-                console.log(result.name, ' - ', colors.green("New"));
+                console.log(result.story.compoundTitle, EyesStorybook._vsToStr(result.story.viewportSize), ' - ', colors.green("New"));
             } else if (result.isPassed) {
-                console.log(result.name, ' - ', colors.green("Passed"));
+                console.log(result.story.compoundTitle, EyesStorybook._vsToStr(result.story.viewportSize), ' - ', colors.green("Passed"));
             } else {
-                console.log(result.name, ' - ', colors.red("Failed " + result.failedSteps + " of " + result.totalSteps));
+                console.log(result.story.compoundTitle, EyesStorybook._vsToStr(result.story.viewportSize), ' - ', colors.red("Failed " + result.failedSteps + " of " + result.totalSteps));
             }
         });
         console.log("See details at", results[0].batchUrl);
