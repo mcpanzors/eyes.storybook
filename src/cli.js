@@ -166,7 +166,9 @@ promise = promise.then(() => {
         console.log('\n');
         console.log('[EYES: TEST RESULTS]:');
         results.forEach((result) => {
-            if (result.isPassed) {
+            if (result.isNew) {
+                console.log(result.name, ' - ', colors.green("New"));
+            } else if (result.isPassed) {
                 console.log(result.name, ' - ', colors.green("Passed"));
             } else {
                 console.log(result.name, ' - ', colors.red("Failed " + result.failedSteps + " of " + result.totalSteps));

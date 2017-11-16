@@ -140,7 +140,7 @@ class StorybookUtils {
     /**
      * @param {string} storybookAddress
      * @param {object} storybook
-     * @returns {Array<{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}>}
+     * @returns {Array<Story>}
      */
     static prepareStories(storybookAddress, storybook) {
         const stories = [];
@@ -158,9 +158,9 @@ class StorybookUtils {
     }
 
     /**
-     * @param {Array<{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}>} stories
+     * @param {Array<Story>} stories
      * @param {Array<{width: number, height: number}>} viewportSizes
-     * @returns {Array<{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}>}
+     * @returns {Array<Story>}
      */
     static mixStories(stories, viewportSizes) {
         if (!viewportSizes) {

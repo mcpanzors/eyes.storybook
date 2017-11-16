@@ -5,6 +5,12 @@ const {PromiseFactory} = require('eyes.utils');
 const {SeleniumUtils} = require('./selenium');
 const {Eyes} = require('./eyes');
 
+/**
+ * @typedef {{width: number, height: number}} RectangleSize
+ * @typedef {{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: RectangleSize}} Story
+ * @typedef {{name: string, isNew: boolean, isPassed: boolean, totalSteps: number, failedSteps: number, batchUrl: string}} TestStoryResult
+ */
+
 class EyesStorybook {
 
     constructor(configs, testBatch, logger) {
@@ -34,8 +40,8 @@ class EyesStorybook {
     }
 
     /**
-     * @param {{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}[]} stories
-     * @returns {Promise.<{name: string, isPassed: string, totalSteps: string, failedSteps: string, batchUrl: string}[]>}
+     * @param {Story[]} stories
+     * @returns {Promise.<TestStoryResult[]>}
      */
     testStories(stories) {
         const that = this, storiesPromises = [];
@@ -66,10 +72,10 @@ class EyesStorybook {
     }
 
     /**
-     * @param {{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}} story
+     * @param {Story} story
      * @param {Object} scaleProviderFactory
      * @param {function} startNextCallback
-     * @returns {Promise.<{name: string, isPassed: string, totalSteps: string, failedSteps: string, batchUrl: string}[]>}
+     * @returns {Promise.<TestStoryResult[]>}
      */
     testStory(story, scaleProviderFactory, startNextCallback) {
         const that = this;
@@ -99,6 +105,7 @@ class EyesStorybook {
         }).then((results) => {
             return {
                 name: results.name,
+                isNew: results.isNew,
                 isPassed: results.status === 'Passed',
                 totalSteps: results.steps,
                 failedSteps: results.mismatches + results.missing,
@@ -108,7 +115,7 @@ class EyesStorybook {
     }
 
     /**
-     * @param {{componentName: string, state: string, url: string, compoundTitle: string, viewportSize: {width: number, height: number}}} story
+     * @param {Story} story
      * @param scaleProviderFactory
      * @returns {Promise.<MutableImage>}
      */
