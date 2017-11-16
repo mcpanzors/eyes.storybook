@@ -170,7 +170,7 @@ class StorybookUtils {
         const newStories = [];
         for (const viewportSize of viewportSizes) {
             for (const story of stories) {
-                newStories.push(Object.assign(story, {viewportSize}));
+                newStories.push(Object.assign({}, story, {viewportSize}));
             }
         }
 
