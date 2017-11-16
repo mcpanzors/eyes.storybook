@@ -15,11 +15,7 @@
     "vue"
   ],
   "homepage": "http://www.applitools.com/",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/applitools/eyes.storybook.git"
-  },
-  "license": "Apache-2.0",
+  "license": "APPLITOOLS SDK LICENSE AGREEMENT",
   "bin": {
     "eyes-storybook": "./bin/eyes-storybook.js"
   },
