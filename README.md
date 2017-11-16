@@ -2,7 +2,7 @@
 
 Applitools Eyes SDK For Storybook
 
-[![NPM](https://nodei.co/npm/eyes.storybook.png?compact=true)](https://www.npmjs.com/package/eyes.storybook)
+[![npm (scoped)](https://img.shields.io/npm/v/eyes.storybook.svg?style=for-the-badge)](https://www.npmjs.com/package/eyes.storybook)
 
 ## Installation
 
