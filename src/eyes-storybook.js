@@ -99,7 +99,7 @@ class EyesStorybook {
         }).then((results) => {
             return {
                 name: results.name,
-                isPassed: results.isPassed,
+                isPassed: results.status === 'Passed',
                 totalSteps: results.steps,
                 failedSteps: results.mismatches + results.missing,
                 batchUrl: results.appUrls.batch
