@@ -26,6 +26,7 @@ class EyesStorybook {
         }
 
         this._driver = builder.build();
+        this._inferredEnvironment = null;
 
         this._promiseFactory = new PromiseFactory((asyncAction) => {
             return new Promise(asyncAction);
@@ -40,6 +41,10 @@ class EyesStorybook {
         const that = this, storiesPromises = [];
 
         return Promise.resolve().then(() => {
+            return that._driver.executeScript('return navigator.userAgent');
+        }).then(function (userAgent) {
+            that._inferredEnvironment = 'useragent:' + userAgent;
+        }).then(() => {
             return SeleniumUtils.updateScalingParams(that._driver);
         }).then((scaleProviderFactory) => {
             let testPromise = Promise.resolve();
@@ -82,6 +87,7 @@ class EyesStorybook {
             eyes.setBatch(that._testBatch);
             eyes.addProperty("Component name", story.componentName);
             eyes.addProperty("State", story.state);
+            eyes.setInferredEnvironment(that._inferredEnvironment);
             eyes.open(that._configs.appName, story.compoundTitle);
 
             return eyes.checkImage(screenshot, story.compoundTitle);
@@ -93,7 +99,7 @@ class EyesStorybook {
         }).then((results) => {
             return {
                 name: results.name,
-                isPassed: results.isPassed,
+                isPassed: results.status === 'Passed',
                 totalSteps: results.steps,
                 failedSteps: results.mismatches + results.missing,
                 batchUrl: results.appUrls.batch
