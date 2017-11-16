@@ -1,6 +1,7 @@
 # Eyes.Storybook
 
 Applitools Eyes SDK For Storybook
+
 [![NPM](https://nodei.co/npm/eyes.storybook.png?compact=true)](https://www.npmjs.com/package/eyes.storybook)
 
 ## Installation
