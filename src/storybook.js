@@ -1,7 +1,6 @@
 'use strict';
 
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const jsdom = require("jsdom/lib/old-api");
 const request = require('request');
@@ -11,7 +10,7 @@ class StorybookUtils {
 
     static startServer(configs, logger) {
         return new Promise((resolve, reject) => {
-            const isWindows = (os.platform() === 'win32');
+            const isWindows = process.platform.startsWith('win');
             let storybookPath = path.resolve(process.cwd(), 'node_modules/.bin/start-storybook' + (isWindows ? '.cmd' : ''));
 
             // start Storybook dev server
@@ -34,18 +33,26 @@ class StorybookUtils {
                 return reject(new Error('Storybook config file not found: ' + storybookConfigPath));
             }
 
+            let isConfigOverridden = false;
             const storybookConfigBody = fs.readFileSync(storybookConfigPath, 'utf8');
             if (!storybookConfigBody.includes("__storybook_stories__")) {
-                const newStorybookConfig = storybookConfigBody + "\nif (typeof window === 'object') {\n  window.__storybook_stories__ = require('" + (configs.storybookVersion === 3 ? '@storybook/' + configs.storybookApp : '@kadira/storybook') + "').getStorybook();\n}";
-                fs.writeFileSync(storybookConfigPath, newStorybookConfig, 'utf8');
+                isConfigOverridden = true;
+                let template = fs.readFileSync(`${__dirname}/configTemplates/storybook.v${configs.storybookVersion}.js`, 'utf8');
+                template = template.replace('${configBody}', storybookConfigBody).replace('${app}', configs.storybookApp);
+                fs.writeFileSync(storybookConfigPath, template, 'utf8');
             }
 
             logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
-            const storybookProcess = spawn(storybookPath, args, {detached: false});
+            const storybookProcess = spawn(storybookPath, args, {detached: !isWindows});
+
+            if (configs.debug) {
+                storybookProcess.stdout.on('data', data => { console.log(data.toString('utf8').trim()) });
+                storybookProcess.stderr.on('data', data => { console.error(data.toString('utf8').trim()) });
+            }
 
             // exit on terminate
             process.on('exit', function () {
-                if (fs.readFileSync(storybookConfigPath, 'utf8') !== storybookConfigBody) {
+                if (isConfigOverridden) {
                     fs.writeFileSync(storybookConfigPath, storybookConfigBody, 'utf8');
                 }
 
@@ -68,10 +75,11 @@ class StorybookUtils {
 
     /**
      * @param {string} storybookAddress
+     * @param {Logger} logger
      * @param {number} [retries]
      * @returns {Promise.<string>}
      */
-    static getStorybookPreviewBundle(storybookAddress, retries) {
+    static getStorybookPreviewBundle(storybookAddress, logger, retries) {
         const that = this;
         return new Promise((resolve, reject) => {
             if (retries === 0) {
@@ -80,21 +88,23 @@ class StorybookUtils {
             } else if (retries) {
                 retries--;
             } else {
-                retries = 2; // this and 2 additionally
+                retries = 2; // this and 2 more
             }
 
-            request.get(storybookAddress + 'static/preview.bundle.js', function (err, response, body) {
+            request.get(storybookAddress + 'static/preview.bundle.js', {timeout: 2000}, function (err, response, body) {
                 if (err || response.statusCode !== 200 || !body) {
                     setTimeout(() => {
-                        return that.getStorybookPreviewBundle(storybookAddress, retries).then((body) => {
+                        logger.log("Failed. Trying retry...");
+                        return that.getStorybookPreviewBundle(storybookAddress, logger, retries).then((body) => {
                             resolve(body);
                         }, (err) => {
                             reject(err);
                         });
-                    }, 1000);
+                    }, 3000);
                     return;
                 }
 
+                logger.log("Bundle received.");
                 resolve(body);
             });
         });
@@ -111,8 +121,9 @@ class StorybookUtils {
             // JSDom is node-parser for javascript and therefore it doesn't support some browser's API.
             // The Applitools Storybook API itself don't require them, but they needed to run clients' applications correctly.
             const mocksCode = [
-                fs.readFileSync(__dirname + '/mocks/match-media.js', 'utf8'),
+                fs.readFileSync(__dirname + '/mocks/event-source.js', 'utf8'),
                 fs.readFileSync(__dirname + '/mocks/local-storage.js', 'utf8'),
+                fs.readFileSync(__dirname + '/mocks/match-media.js', 'utf8'),
             ];
 
             const jsdomConfig = {

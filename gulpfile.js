@@ -3,7 +3,7 @@ const gulpCombine = require('gulp-combine');
 const uglify = require('gulp-uglifyes');
 
 gulp.task('build', function(){
-    gulp.src(['src/**/*.js', '!src/mocks/**/*.js'])
+    gulp.src(['src/**/*.js', '!src/mocks/**/*.js', '!src/configTemplates/**/*.js'])
         .pipe(gulpCombine({
             mainModule: "cli",
             outputFile: "bundle.js"
@@ -19,6 +19,8 @@ gulp.task('build', function(){
 gulp.task('copy', function () {
     gulp.src('src/mocks/**/*.js')
         .pipe(gulp.dest('dist/mocks'));
+    gulp.src('src/configTemplates/**/*.js')
+        .pipe(gulp.dest('dist/configTemplates'));
 });
 
 gulp.task('default', ['copy', 'build']);

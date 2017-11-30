@@ -64,6 +64,8 @@ if (fs.existsSync(configsPath)) {
     configs = defaultConfigs;
 }
 
+configs.debug = yargs.debug;
+
 if (configs.storybookApp && !['react', 'vue'].includes(configs.storybookApp)) {
     throw new Error('storybookApp should be "react" or "vue".');
 }
@@ -133,7 +135,7 @@ function testStories(stories, testBatch) {
 promise = promise.then(() => {
     logger.log('Getting stories from storybook instance...');
 
-    return StorybookUtils.getStorybookPreviewBundle(storybookAddress).then((previewCode) => {
+    return StorybookUtils.getStorybookPreviewBundle(storybookAddress, logger).then((previewCode) => {
         return StorybookUtils.getStorybook(previewCode, configs);
     });
 }).then((storybook) => {
