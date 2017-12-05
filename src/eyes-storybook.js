@@ -1,5 +1,6 @@
 'use strict';
 
+require('chromedriver');
 const {Builder} = require('selenium-webdriver');
 const {PromiseFactory} = require('eyes.utils');
 const {SeleniumUtils} = require('./selenium');

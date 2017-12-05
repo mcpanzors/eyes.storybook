@@ -22,7 +22,8 @@
   "dependencies": {
     "eyes.sdk": "0.0.66",
     "eyes.utils": "0.0.26",
-    "selenium-webdriver": "^3.0.0",
+    "chromedriver": "^2.33.2",
+    "selenium-webdriver": "^3.6.0",
     "request": "^2.80.0",
     "yargs": "^8.0.2",
     "jsdom": "^11.1.0",
