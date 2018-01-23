@@ -9,10 +9,11 @@ class Eyes extends EyesBase {
      * @constructor
      *
      * @param {PromiseFactory} [promiseFactory] If not specified will be created using RSVP lib
+     * @param serverUrl
      * @augments EyesBase
      **/
-    constructor(promiseFactory) {
-        super(promiseFactory, EyesBase.DEFAULT_EYES_SERVER, false);
+    constructor(promiseFactory, serverUrl) {
+        super(promiseFactory, serverUrl || EyesBase.DEFAULT_EYES_SERVER, false);
 
         this._screenshot = undefined;
         this._title = undefined;

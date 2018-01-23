@@ -89,7 +89,7 @@ class EyesStorybook {
 
             return screenshot;
         }).then((screenshot) => {
-            eyes = new Eyes(that._promiseFactory);
+            eyes = new Eyes(that._promiseFactory, that._configs.serverUrl);
             eyes.setApiKey(that._configs.apiKey);
             eyes.setBatch(that._testBatch);
             eyes.addProperty("Component name", story.componentName);
