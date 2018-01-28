@@ -30,7 +30,7 @@ To change browser, viewport sizes or something else, you can use configuration f
 
 Create configuration file called `applitools.config.js` in your project directory (the name can be changed using command argument, e.g. `npm run eyes-storybook -- --conf myconfig.js`).
 
-The default values and all available options, you can find in [defaultConfigs.js](src/defaultConfigs.js)
+The default values and all available options, you can find in [DefaultConfigs.js](src/DefaultConfigs.js)
 
 Common example:
 

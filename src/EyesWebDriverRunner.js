@@ -3,8 +3,8 @@
 require('chromedriver');
 const {Builder} = require('selenium-webdriver');
 const {PromiseFactory} = require('eyes.utils');
-const {SeleniumUtils} = require('./selenium');
-const {Eyes} = require('./eyes');
+const {SeleniumUtils} = require('./EyesSeleniumUtils');
+const {Eyes} = require('./EyesStorybook');
 
 /**
  * @typedef {{width: number, height: number}} RectangleSize
