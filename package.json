@@ -29,15 +29,6 @@
     "jsdom": "^11.1.0",
     "colors": "^1.1.2"
   },
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-uglifyes": "^0.1.2",
-    "gulp-combine": "astappev/gulp-combine"
-  },
-  "scripts": {
-    "build": "gulp default",
-    "prepublishOnly": "npm run build"
-  },
   "engines": {
     "node": ">=6.9.0"
   }

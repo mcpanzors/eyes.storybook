@@ -2,9 +2,4 @@
 
 const fs = require('fs');
 
-if (fs.existsSync(__dirname + '/../dist/bundle.js')) {
-    require('../dist/bundle');
-} else {
-    require('../src/cli');
-}
-
+require('../src/cli');
