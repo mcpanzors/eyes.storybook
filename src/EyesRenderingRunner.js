@@ -1,11 +1,13 @@
 'use strict';
 
-require('chromedriver');
-const {Builder} = require('selenium-webdriver');
-const {BatchInfo} = require('eyes.sdk');
+const fs = require('fs');
+const path = require('path');
+const mime = require('mime-types');
+const {BatchInfo, RGridResource, RGridDom} = require('eyes.sdk');
 
 const EyesStorybook = require('./EyesStorybook');
-const EyesSeleniumUtils = require('./EyesSeleniumUtils');
+const StorybookUtils = require('./StorybookUtils');
+const EyesRenderingUtils = require('./EyesRenderingUtils');
 
 class EyesStorybookRunner {
 
@@ -18,8 +20,8 @@ class EyesStorybookRunner {
         this._configs = configs;
 
         this._testBatch = new BatchInfo(configs.appName);
-        this._inferred = null;
-        this._scaleProviderFactory = null;
+        this._domNodes = null;
+        this._resources = null;
     }
 
     /**
@@ -49,17 +51,15 @@ class EyesStorybookRunner {
         let firstStoryPromise;
         this._logger.log('Splitting stories for parallel threads...');
         return that._promiseFactory.makePromise(resolve => {
-            const driver = this.createSeleniumDriver();
-            firstStoryPromise = that.testStory(driver, firstStory, () => resolve());
+            firstStoryPromise = that.testStory(firstStory, () => resolve());
             storiesPromises.push(firstStoryPromise);
         }).then(() => {
             const threadsPromises = [];
             storiesParts.forEach((stories, i) => {
                 let threadPromise = i === 1 ? firstStoryPromise : that._promiseFactory.resolve();
-                const driver = this.createSeleniumDriver();
                 stories.forEach(story => {
                     threadPromise = threadPromise.then(() => {
-                        const promise = that.testStory(driver, story);
+                        const promise = that.testStory(story);
                         storiesPromises.push(promise);
                         return promise;
                     });
@@ -73,49 +73,52 @@ class EyesStorybookRunner {
     }
 
     /**
-     * @param driver
      * @param {StorybookStory} story
      * @param {function} [startNextCallback]
      * @returns {Promise.<TestResults>}
      */
-    testStory(driver, story, startNextCallback) {
+    testStory(story, startNextCallback) {
         this._logger.verbose('Starting collecting resources...');
 
         let promise = this._promiseFactory.resolve();
 
         const that = this;
-        if (!that._inferred) {
+        if (!that._domNodes) {
             promise = promise.then(() => {
-                return driver.executeScript('return navigator.userAgent;');
-            }).then(userAgent => {
-                that._inferred = 'useragent:' + userAgent;
-            }).then(() => {
-                return EyesSeleniumUtils.updateScalingParams(that._logger, driver);
-            }).then(scaleProviderFactory => {
-                that._scaleProviderFactory = scaleProviderFactory;
+                that._logger.verbose('Collecting resources...');
+                that._resources = readResourcesFromDir(that._configs.storybookOutputDir);
+                that._logger.verbose('Collecting resources - done.');
+                that._logger.verbose('Preparing DOM...');
+                const domRootHtml = fs.readFileSync(path.join(that._configs.storybookOutputDir, 'iframe.html'));
+
+                return StorybookUtils.getDocumentFromHtml(that._promiseFactory, domRootHtml).then(document => {
+                    const nodes = document.querySelectorAll('*');
+                    that._domNodes = EyesRenderingUtils.domNodesToCdt(Array.from(nodes).slice(0, 1));
+                    that._logger.verbose('Preparing DOM - done.');
+                });
             });
         }
 
         return promise.then(() => {
-            if (startNextCallback) {
-                startNextCallback();
-            }
-
-            return that.getScreenshotOfStory(driver, story);
-        }).then(screenshot => {
             that._logger.verbose('Preparing Eyes instance...');
             const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory);
             eyes.setApiKey(that._configs.apiKey);
+            eyes.setRender(true);
             eyes.setBatch(that._testBatch);
             eyes.addProperty("Component name", story.getComponentName());
             eyes.addProperty("State", story.getState());
-            eyes.setInferredEnvironment(that._inferred);
             if (that._configs.debug) {
                 eyes.setLogHandler(that._logger.getLogHandler());
             }
 
             return eyes.open(that._configs.appName, story.getCompoundTitle(), story.getViewportSize()).then(() => {
-                return eyes.checkImage(screenshot, story.getCompoundTitle());
+                const dom = new RGridDom();
+                dom.setResources(that._resources);
+                dom.setDomNodes(that._domNodes);
+                dom.setUrl(story.getStorybookUrl('http://localhost/'));
+                that._logger.verbose('Preparing Eyes instance - done.');
+                that._logger.verbose('Sending requests...');
+                return eyes.checkByRender(dom, story.getCompoundTitle(), startNextCallback);
             }).then(() => {
                 return eyes.close(false);
             }).then(results => {
@@ -124,48 +127,29 @@ class EyesStorybookRunner {
             });
         });
     }
-
-
-    /**
-     * @param driver
-     * @param {StorybookStory} story
-     * @returns {Promise.<MutableImage>}
-     */
-    getScreenshotOfStory(driver, story) {
-        if (story.getViewportSize()) {
-            this._logger.verbose(`Setting viewport size ${story.getViewportSize()} of '${story.getCompoundTitle()}'...`);
-            EyesSeleniumUtils.setViewportSize(this._logger, driver, story.getViewportSize());
-        }
-
-        this._logger.verbose("Opening url of '" + story.getCompoundTitle() + "'...");
-        driver.get(story.getStorybookUrl(this._configs.storybookAddress));
-
-        const that = this;
-        return driver.controlFlow().execute(() => {
-            that._logger.verbose(`Capturing screenshot of '${story.getCompoundTitle()}' ${story.getViewportSize()}...`);
-            return EyesSeleniumUtils.getScreenshot(driver, that._scaleProviderFactory, that._promiseFactory).then((screenshot) => {
-                that._logger.log(`Capturing screenshot of '${story.getCompoundTitle()}' ${story.getViewportSize()} done.`);
-                return screenshot;
-            });
-        });
-    }
-
-    createSeleniumDriver() {
-        const builder = new Builder();
-        if (this._configs.seleniumAddress) {
-            builder.usingServer(this._configs.seleniumAddress);
-        }
-
-        if (this._configs.capabilities && Object.keys(this._configs.capabilities).length) {
-            for (const key in this._configs.capabilities) {
-                if (this._configs.capabilities.hasOwnProperty(key)) {
-                    builder.getCapabilities().set(key, this._configs.capabilities[key]);
-                }
-            }
-        }
-
-        return builder.build();
-    }
 }
+
+const readResourcesFromDir = (parentDir, dir, resources = []) => {
+    const files = fs.readdirSync(parentDir);
+    files.forEach(file => {
+        const longPathToFile = path.join(parentDir, file);
+        const pathToFile = dir ? (dir + '/' + file) : file;
+
+        if (fs.statSync(longPathToFile).isDirectory()) {
+            resources = readResourcesFromDir(longPathToFile, pathToFile, resources);
+        } else {
+            if (pathToFile === 'index.html' || pathToFile === 'iframe.html' || file.endsWith('.map')) {
+                return;
+            }
+
+            const resource = new RGridResource();
+            resource.setUrl('http://localhost/' + pathToFile);
+            resource.setContentType(mime.lookup(file));
+            resource.setContent(fs.readFileSync(longPathToFile));
+            resources.push(resource);
+        }
+    });
+    return resources;
+};
 
 module.exports = EyesStorybookRunner;
