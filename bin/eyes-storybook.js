@@ -77,8 +77,8 @@ configs.debug = yargs.debug;
 if (!configs.apiKey) {
     throw new Error('The Applitools API Key is missing. Please add it to your configuration file or set ENV key.');
 }
-if (!configs.maxRunningBrowsers) {
-    throw new Error("maxRunningBrowsers should be defined and at least 1.");
+if (!configs.maxRunningBrowsers && configs.maxRunningBrowsers !== 0) {
+    throw new Error("maxRunningBrowsers should be defined.");
 }
 if (configs.storybookApp && !['react', 'vue'].includes(configs.storybookApp)) {
     throw new Error('storybookApp should be "react" or "vue".');

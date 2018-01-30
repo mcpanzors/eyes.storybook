@@ -31,7 +31,8 @@ class EyesStorybookRunner {
     testStories(stories) {
         this._logger.log('Splitting stories for parallel threads...');
 
-        const threadsCount = stories.length > this._configs.maxRunningBrowsers ? this._configs.maxRunningBrowsers : stories.length;
+        const maxThreads = this._configs.maxRunningBrowsers;
+        const threadsCount = (maxThreads === 0 || maxThreads > stories.length) ? stories.length : maxThreads;
         const storiesParts = [];
 
         let storiesMod = stories.length % threadsCount;
