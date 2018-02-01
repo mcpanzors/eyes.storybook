@@ -9,8 +9,6 @@ const {Logger, ConsoleLogHandler, PromiseFactory} = require('eyes.sdk');
 
 const defaultConfigs = require('../src/DefaultConfigs');
 const StorybookUtils = require('../src/StorybookUtils');
-const EyesRenderingRunner = require('../src/EyesRenderingRunner');
-const EyesWebDriverRunner = require('../src/EyesWebDriverRunner');
 
 const VERSION = require('../package.json').version;
 const DEFAULT_CONFIG_PATH = 'applitools.config.js';
@@ -53,24 +51,30 @@ if (yargs.version) {
 }
 
 
-/* --- Init common interfaces --- */
-const logger = new Logger();
-logger.setLogHandler(new ConsoleLogHandler(yargs.debug));
-const promiseFactory = new PromiseFactory(asyncAction => new Promise(asyncAction));
-
-
 /* --- Load configuration from config file --- */
 let configs;
 const configsPath = path.resolve(process.cwd(), yargs.conf);
 if (fs.existsSync(configsPath)) {
-    logger.log('Loading configuration from "' + configsPath + '"...');
+    console.log('Loading configuration from "' + configsPath + '"...');
     configs = Object.assign(defaultConfigs, require(configsPath));
 } else if (yargs.conf !== DEFAULT_CONFIG_PATH) {
     throw new Error('Config file cannot be found in "' + configsPath + '".');
 } else {
     configs = defaultConfigs;
 }
-configs.debug = yargs.debug;
+if (yargs.debug) {
+    configs.showLogs = 'verbose';
+    configs.showEyesSdkLogs = 'verbose';
+    configs.showStorybookOutput = true;
+}
+
+
+/* --- Init common interfaces --- */
+const promiseFactory = new PromiseFactory(asyncAction => new Promise(asyncAction));
+const logger = new Logger();
+if (configs.showLogs) {
+    logger.setLogHandler(new ConsoleLogHandler(configs.showLogs === 'verbose'));
+}
 
 
 /* --- Validating configuration --- */
@@ -117,24 +121,26 @@ if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version
 
 /* --- Main execution flow --- */
 let promise = promiseFactory.resolve();
-if (configs.useRenderServer) {
-    /* --- Building Storybook --- */
+if (configs.useRenderer) {
+    /* --- Building Storybook and make screenshots remote using RenderingGrid --- */
     promise = promise.then(() => {
         return StorybookUtils.buildStorybook(logger, promiseFactory, configs);
     }).then(() => {
         return StorybookUtils.getStoriesFromStatic(logger, promiseFactory, configs)
     }).then(stories => {
+        const EyesRenderingRunner = require('../src/EyesRenderingRunner');
         const runner = new EyesRenderingRunner(logger, promiseFactory, configs);
         return runner.testStories(stories);
     });
 } else {
-    /* --- Starting Storybook --- */
+    /* --- Starting Storybook and make screenshots locally using WebDriver --- */
     promise = promise.then(() => {
         return StorybookUtils.startServer(logger, promiseFactory, configs);
     }).then(storybookAddress => {
         configs.storybookAddress = storybookAddress;
         return StorybookUtils.getStoriesFromWeb(logger, promiseFactory, configs);
     }).then(stories => {
+        const EyesWebDriverRunner = require('../src/EyesWebDriverRunner');
         const runner = new EyesWebDriverRunner(logger, promiseFactory, configs);
         return runner.testStories(stories);
     });
@@ -143,7 +149,6 @@ if (configs.useRenderServer) {
 
 /* --- Prepare and display results --- */
 return promise.then(/** TestResults[] */ results => {
-    logger.log('Test finished.');
     if (results.length > 0) {
         console.log('\n');
         console.log('[EYES: TEST RESULTS]:');

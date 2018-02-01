@@ -1,6 +1,2 @@
-.idea/*
 .git/*
 test/*
-src/*
-gulpfile.js
-package-lock.json

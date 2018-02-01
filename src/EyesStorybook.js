@@ -63,27 +63,20 @@ class EyesStorybook extends EyesBase {
 
     //noinspection JSUnusedGlobalSymbols
     /**
-     * @param {RGridDom} dom The webpage DOM
+     * @param {String} imageLocation The image URL
      * @param {String} [title] An optional tag to be associated with the validation checkpoint.
-     * @param {function} [renderDoneCallback]
      * @return {Promise}
      */
-    checkByRender(dom, title, renderDoneCallback) {
+    checkUrl(imageLocation, title) {
         const that = this;
         return this._globalFlow = this._globalFlow.then(() => {
-            return that.renderWindow(dom);
-        }).then(imageLocation => {
-            if (renderDoneCallback) {
-                renderDoneCallback();
-            }
-
             that._title = title || '';
             that._screenshot = null;
             that._screenshotUrl = imageLocation;
 
             const regionProvider = new NullRegionProvider(that.getPromiseFactory());
 
-            that._logger.verbose(`checkByRender(dom, "${title}")`);
+            that._logger.verbose(`checkUrl(${imageLocation}, "${title}")`);
             return super.checkWindowBase(regionProvider, title, false);
         });
     };

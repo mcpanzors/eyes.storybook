@@ -61,9 +61,9 @@ class StorybookUtils {
         logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
         const storybookProcess = spawn(storybookPath, args, {detached: !IS_WINDOWS});
 
-        if (configs.debug) {
+        storybookProcess.stderr.on('data', data => { console.error(data.toString('utf8').trim()) });
+        if (configs.showStorybookOutput) {
             storybookProcess.stdout.on('data', data => { console.log(data.toString('utf8').trim()) });
-            storybookProcess.stderr.on('data', data => { console.error(data.toString('utf8').trim()) });
         }
 
         // exit on terminate
@@ -231,7 +231,7 @@ const getStorybookInstance = (promiseFactory, configs, previewCode) => {
             }
         };
 
-        if (configs && configs.debug) {
+        if (configs.showStorybookOutput) {
             jsdomConfig.virtualConsole = jsdom.createVirtualConsole().sendTo(console);
         }
 

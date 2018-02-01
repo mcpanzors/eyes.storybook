@@ -66,6 +66,17 @@ class StorybookStory {
     }
 
     /**
+     * @return {String}
+     */
+    getCompoundTitleWithViewportSize() {
+        if (!this._viewportSize) {
+            return this.getCompoundTitle();
+        }
+
+        return `${this.getCompoundTitle()} [${this._viewportSize.getWidth()}x${this._viewportSize.getHeight()}]`;
+    }
+
+    /**
      * @param {String} storybookAddress
      * @return {String}
      */
