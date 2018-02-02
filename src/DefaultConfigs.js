@@ -33,7 +33,7 @@ module.exports = {
     },
 
     /* Logging  */
-    showLogs: 'verbose', // [false, true, 'verbose'] // change to 'verbose' if you want to have more detailed logs
+    showLogs: true, // [false, true, 'verbose'] // change to 'verbose' if you want to have more detailed logs
     showEyesSdkLogs: false, // [false, true, 'verbose'] // enable if you want to see logs from eyes.sdk
-    showStorybookOutput: true, // enable if you want to see storybook output together with other logs
+    showStorybookOutput: false, // enable if you want to see storybook output together with other logs
 };

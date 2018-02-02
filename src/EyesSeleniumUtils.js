@@ -166,15 +166,13 @@ class EyesSeleniumUtils extends EyesJsBrowserUtils {
      */
     static captureViewport(driver, scaleProviderFactory, promiseFactory) {
         return EyesSeleniumUtils.takeScreenshot(driver, promiseFactory).then(parsedImage => {
-            return parsedImage.getSize().then(imageSize => {
-                const scaleProvider = scaleProviderFactory.getScaleProvider(imageSize.getWidth());
-                if (scaleProvider && scaleProvider.getScaleRatio() !== 1) {
-                    let scaleRatio = scaleProvider.getScaleRatio();
-                    return parsedImage.scale(scaleRatio);
-                }
-            }).then(() => {
-                return parsedImage;
-            });
+            const scaleProvider = scaleProviderFactory.getScaleProvider(parsedImage.getSize().getWidth());
+            if (scaleProvider && scaleProvider.getScaleRatio() !== 1) {
+                let scaleRatio = scaleProvider.getScaleRatio();
+                return parsedImage.scale(scaleRatio);
+            }
+
+            return parsedImage;
         });
     };
 
@@ -268,7 +266,7 @@ const setBrowserSizeLoop = (logger, driver, requiredSize, sleep, retriesLeft) =>
         return driver.manage().window().getSize();
     }).then(/** {width: number, height: number} */ result => {
         const currentSize = new RectangleSize(result.width, result.height);
-        logger.log(`Current browser size: ${currentSize}`);
+        logger.verbose(`Current browser size: ${currentSize}`);
         if (currentSize.equals(requiredSize)) {
             return true;
         }
