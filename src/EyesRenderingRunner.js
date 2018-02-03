@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime-types');
-const {BatchInfo, RGridResource, RGridDom, Logger, ConsoleLogHandler} = require('eyes.sdk');
+const {BatchInfo, RGridResource, RGridDom, Logger, ConsoleLogHandler} = require('eyes.sdk.core');
 
 const EyesStorybook = require('./EyesStorybook');
 const StorybookUtils = require('./StorybookUtils');
@@ -113,6 +113,8 @@ class EyesRenderingRunner {
             eyes.setBatch(that._testBatch);
             eyes.addProperty("Component name", story.getComponentName());
             eyes.addProperty("State", story.getState());
+            eyes.setHostOS("Linux");
+            eyes.setHostApp("Chrome");
             if (that._configs.showEyesSdkLogs) {
                 eyes.setLogHandler(new ConsoleLogHandler(that._configs.showEyesSdkLogs === 'verbose'));
             }

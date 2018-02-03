@@ -2,7 +2,7 @@
 
 /** @typedef {EyesJsExecutor} IWebDriver */
 
-const {ContextBasedScaleProviderFactory, FixedScaleProviderFactory, SimplePropertyHandler, Region, RectangleSize, ImageUtils, MutableImage, EyesJsBrowserUtils, ArgumentGuard} = require('eyes.sdk');
+const {ContextBasedScaleProviderFactory, FixedScaleProviderFactory, SimplePropertyHandler, Region, RectangleSize, ImageUtils, MutableImage, EyesJsBrowserUtils, ArgumentGuard} = require('eyes.sdk.core');
 
 class EyesSeleniumUtils extends EyesJsBrowserUtils {
 

@@ -20,7 +20,7 @@
     "eyes-storybook": "./bin/eyes-storybook.js"
   },
   "dependencies": {
-    "eyes.sdk": "^1.0.0",
+    "eyes.sdk.core": "^1.0.0",
     "chromedriver": "^2.34.1",
     "selenium-webdriver": "^3.6.0",
     "axios": "^0.17.1",
