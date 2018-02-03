@@ -26,7 +26,7 @@ $ npm run eyes-storybook
 
 ## Advanced configuration
 
-To change browser, viewport sizes or something else, you can use configuration file.
+To change browser, viewport sizes etc., or use the rendering service, you can use a configuration file. 
 
 Create configuration file called `applitools.config.js` in your project directory (the name can be changed using command argument, e.g. `npm run eyes-storybook -- --conf myconfig.js`).
 
@@ -35,6 +35,7 @@ The default values and all available options, you can find in [DefaultConfigs.js
 Common example:
 
     module.exports = {
+        useRenderer: true, // Use the rendering service 
         appName: 'My Storybook Application',
         viewportSize: [
             {width: 1000, height: 600}
