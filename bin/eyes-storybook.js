@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const colors = require('colors/safe');
 
-const {Logger, ConsoleLogHandler, PromiseFactory} = require('eyes.sdk.core');
+const {Logger, ConsoleLogHandler, PromiseFactory} = require('@applitools/eyes.sdk.core');
 
 const defaultConfigs = require('../src/DefaultConfigs');
 const StorybookUtils = require('../src/StorybookUtils');

@@ -2,7 +2,7 @@
 
 require('chromedriver');
 const {Builder} = require('selenium-webdriver');
-const {BatchInfo, ConsoleLogHandler} = require('eyes.sdk.core');
+const {BatchInfo, ConsoleLogHandler} = require('@applitools/eyes.sdk.core');
 
 const EyesStorybook = require('./EyesStorybook');
 const EyesSeleniumUtils = require('./EyesSeleniumUtils');

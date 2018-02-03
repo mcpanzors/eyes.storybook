@@ -1,6 +1,6 @@
 'use strict';
 
-const {EyesBase, RectangleSize, EyesSimpleScreenshot, NullRegionProvider} = require('eyes.sdk.core');
+const {EyesBase, RectangleSize, EyesSimpleScreenshot, NullRegionProvider} = require('@applitools/eyes.sdk.core');
 const VERSION = require('../package.json').version;
 
 class EyesStorybook extends EyesBase {
