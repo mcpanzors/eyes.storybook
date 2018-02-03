@@ -5,7 +5,7 @@ const path = require('path');
 const jsdom = require("jsdom/lib/old-api");
 const axios = require('axios');
 const {spawn, execSync} = require('child_process');
-const {RectangleSize} = require('eyes.sdk.core');
+const {RectangleSize} = require('@applitools/eyes.sdk.core');
 
 const StorybookStory = require('./StorybookStory');
 

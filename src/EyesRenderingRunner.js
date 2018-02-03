@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime-types');
-const {BatchInfo, RGridResource, RGridDom, Logger, ConsoleLogHandler} = require('eyes.sdk.core');
+const {BatchInfo, RGridResource, RGridDom, Logger, ConsoleLogHandler} = require('@applitools/eyes.sdk.core');
 
 const EyesStorybook = require('./EyesStorybook');
 const StorybookUtils = require('./StorybookUtils');
