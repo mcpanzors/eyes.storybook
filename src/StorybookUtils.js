@@ -67,23 +67,25 @@ class StorybookUtils {
         }
 
         // exit on terminate
-        process.on('exit', function () {
+        process.on('exit', () => {
             if (isConfigOverridden) {
                 fs.writeFileSync(storybookConfigPath, storybookConfigBody, 'utf8');
             }
 
             try {
-                storybookProcess.kill();
-                process.kill(-storybookProcess.pid);
-            } catch (e) {}
+                if (IS_WINDOWS) {
+                    spawn("taskkill", ["/pid", storybookProcess.pid, '/f', '/t']);
+                } else {
+                    process.kill(-storybookProcess.pid);
+                }
+            } catch (e) {
+                console.error("Can't kill child (Storybook) process.", e);
+            }
         });
-        process.on('SIGINT', function () {
-            process.exit();
-        });
-        process.on('uncaughtException', function (e) {
-            console.error('An error during staring Storebook', e);
-            process.exit(1);
-        });
+
+        process.on('SIGINT', () => process.exit());
+        process.on('SIGTERM', () => process.exit());
+        process.on('uncaughtException', () => process.exit(1));
 
         return waitForStorybookStarted(logger, promiseFactory, storybookProcess, `http://${storybookHost}:${storybookPort}/`);
     };
@@ -283,16 +285,19 @@ const prepareStories = (logger, promiseFactory, configs, previewCode) => {
  */
 const waitForStorybookStarted = (logger, promiseFactory, storybookProcess, storybookAddress) => {
     return promiseFactory.makePromise((resolve, reject) => {
-        storybookProcess.stdout.on('data', data => {
+        storybookProcess.stdout.on('data', data => checkAddress(data));
+        storybookProcess.stderr.on('data', data => checkAddress(data));
+
+        const checkAddress = (data) => {
             const str = data.toString('utf8').trim();
             if (str.includes(storybookAddress)) {
                 logger.log('Starting Storybook server done.');
                 resolve(storybookAddress);
             }
-        });
+        };
 
         // Set up the timeout
-        setTimeout(function() {
+        setTimeout(() => {
             reject('Storybook din\'t start after 5 min waiting.');
         }, 5 * 60 * 1000);
     });
