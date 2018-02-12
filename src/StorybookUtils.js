@@ -55,21 +55,21 @@ class StorybookUtils {
             isConfigOverridden = true;
             let template = fs.readFileSync(`${__dirname}/configTemplates/storybook.v${configs.storybookVersion}.js`, 'utf8');
             template = template.replace('${configBody}', storybookConfigBody).replace('${app}', configs.storybookApp);
-            fs.writeFileSync(storybookConfigPath, template, 'utf8');
+            fs.writeFileSync(storybookConfigPath, template, {encoding: 'utf8'});
         }
 
         logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
         const storybookProcess = spawn(storybookPath, args, {detached: !IS_WINDOWS});
 
-        storybookProcess.stderr.on('data', data => { console.error(data.toString('utf8').trim()) });
+        storybookProcess.stderr.on('data', data => console.error(bufferToString(data)));
         if (configs.showStorybookOutput) {
-            storybookProcess.stdout.on('data', data => { console.log(data.toString('utf8').trim()) });
+            storybookProcess.stdout.on('data', data => console.log(bufferToString(data)));
         }
 
         // exit on terminate
         process.on('exit', () => {
             if (isConfigOverridden) {
-                fs.writeFileSync(storybookConfigPath, storybookConfigBody, 'utf8');
+                fs.writeFileSync(storybookConfigPath, storybookConfigBody, {encoding: 'utf8'});
             }
 
             try {
@@ -87,7 +87,7 @@ class StorybookUtils {
         process.on('SIGTERM', () => process.exit());
         process.on('uncaughtException', () => process.exit(1));
 
-        return waitForStorybookStarted(logger, promiseFactory, storybookProcess, `http://${storybookHost}:${storybookPort}/`);
+        return waitForStorybookStarted(promiseFactory, storybookProcess, storybookHost, storybookPort);
     };
 
     /**
@@ -119,7 +119,7 @@ class StorybookUtils {
             isConfigOverridden = true;
             let template = fs.readFileSync(`${__dirname}/configTemplates/storybook.v${configs.storybookVersion}.js`, 'utf8');
             template = template.replace('${configBody}', storybookConfigBody).replace('${app}', configs.storybookApp);
-            fs.writeFileSync(storybookConfigPath, template, 'utf8');
+            fs.writeFileSync(storybookConfigPath, template, {encoding: 'utf8'});
         }
 
         logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
@@ -127,7 +127,7 @@ class StorybookUtils {
 
         logger.log('Building Storybook done.');
         if (isConfigOverridden) {
-            fs.writeFileSync(storybookConfigPath, storybookConfigBody, 'utf8');
+            fs.writeFileSync(storybookConfigPath, storybookConfigBody, {encoding: 'utf8'});
         }
 
         return promiseFactory.resolve();
@@ -188,7 +188,9 @@ class StorybookUtils {
      * @returns {{ app: string, version: number}}
      */
     static retrieveStorybookVersion(json) {
+        // noinspection JSUnresolvedVariable
         const dependencies = json.dependencies || {};
+        // noinspection JSUnresolvedVariable
         const devDependencies = json.devDependencies || {};
 
         if (dependencies['@kadira/storybook'] || devDependencies['@kadira/storybook']) {
@@ -277,34 +279,38 @@ const prepareStories = (logger, promiseFactory, configs, previewCode) => {
 };
 
 /**
- * @param {Logger} logger
  * @param {PromiseFactory} promiseFactory
- * @param {any} storybookProcess
- * @param {String} storybookAddress
- * @return {Promise<String>}
+ * @param {ChildProcess} storybookProcess
+ * @param {String} storybookHost
+ * @param {Number} storybookPort
+ * @return {Promise<string>}
  */
-const waitForStorybookStarted = (logger, promiseFactory, storybookProcess, storybookAddress) => {
+const waitForStorybookStarted = (promiseFactory, storybookProcess, storybookHost, storybookPort) => {
     return promiseFactory.makePromise((resolve, reject) => {
-        storybookProcess.stdout.on('data', data => checkAddress(data));
-        storybookProcess.stderr.on('data', data => checkAddress(data));
+        storybookProcess.stdout.on('data', data => stdoutListener(bufferToString(data)));
+        storybookProcess.stderr.on('data', data => stderrListener(bufferToString(data)));
 
-        const checkAddress = (data) => {
-            const str = data.toString('utf8').trim();
+        const stderrListener = (str) => {
             if (str.includes('Error: listen EADDRINUSE :::')) {
                 return reject("Storybook port already in use.");
             }
+        };
 
-            if (str.includes(storybookAddress)) {
-                logger.log('Starting Storybook server done.');
-                return resolve(storybookAddress);
+        const stdoutListener = (str) => {
+            if (str.includes('webpack built')) {
+                return resolve(`http://${storybookHost}:${storybookPort}/`);
             }
         };
 
         // Set up the timeout
-        setTimeout(() => {
-            reject('Storybook din\'t start after 5 min waiting.');
-        }, 5 * 60 * 1000);
+        setTimeout(() => reject('Storybook din\'t start after 5 min waiting.'), 5 * 60 * 1000); // 5 min
     });
 };
+
+/**
+ * @param {Buffer} data
+ * @return {string}
+ */
+const bufferToString = (data) => data.toString('utf8').trim();
 
 module.exports = StorybookUtils;

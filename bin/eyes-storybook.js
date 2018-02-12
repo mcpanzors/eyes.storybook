@@ -137,6 +137,7 @@ if (configs.useRenderer) {
     promise = promise.then(() => {
         return StorybookUtils.startServer(logger, promiseFactory, configs);
     }).then(storybookAddress => {
+        logger.log('Starting Storybook server - done.');
         configs.storybookAddress = storybookAddress;
         return StorybookUtils.getStoriesFromWeb(logger, promiseFactory, configs);
     }).then(stories => {
