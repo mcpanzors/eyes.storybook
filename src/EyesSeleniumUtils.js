@@ -2,7 +2,18 @@
 
 /** @typedef {EyesJsExecutor} IWebDriver */
 
-const {ContextBasedScaleProviderFactory, FixedScaleProviderFactory, SimplePropertyHandler, Region, RectangleSize, ImageUtils, MutableImage, EyesJsBrowserUtils, ArgumentGuard} = require('@applitools/eyes.sdk.core');
+const {
+    ContextBasedScaleProviderFactory,
+    FixedScaleProviderFactory,
+    SimplePropertyHandler,
+    Region,
+    RectangleSize,
+    MutableImage,
+    EyesJsBrowserUtils,
+    ArgumentGuard,
+    Location,
+    GeneralUtils
+} = require('@applitools/eyes.sdk.core');
 
 class EyesSeleniumUtils extends EyesJsBrowserUtils {
 
@@ -183,73 +194,44 @@ class EyesSeleniumUtils extends EyesJsBrowserUtils {
      * @return {Promise<MutableImage>}
      */
     static getScreenshot(driver, scaleProviderFactory, promiseFactory) {
-        let entirePageSize, originalPosition, screenshot;
-        return EyesSeleniumUtils.getCurrentFrameContentEntireSize(driver).then((result) => {
-            entirePageSize = result;
+        let entireSize, originalPosition, screenshot;
+        return EyesSeleniumUtils.getCurrentFrameContentEntireSize(driver).then(contentSize => {
+            entireSize = contentSize;
             return EyesSeleniumUtils.getCurrentScrollPosition(driver);
-        }).then((result) => {
-            originalPosition = result;
+        }).then(scrollPosition => {
+            originalPosition = scrollPosition;
             return EyesSeleniumUtils.captureViewport(driver, scaleProviderFactory, promiseFactory);
-        }).then((image) => {
+        }).then(image => {
             screenshot = image;
-            return image.asObject();
-        }).then((imageObject) => {
-            return promiseFactory.makePromise((resolve2) => {
-                if (imageObject.width >= entirePageSize.getWidth() && imageObject.height >= entirePageSize.getHeight()) {
-                    resolve2();
-                    return;
-                }
+            if (image.getWidth() >= entireSize.getWidth() && image.getHeight() >= entireSize.getHeight()) {
+                return;
+            }
 
-                let screenshotPartSize = new RectangleSize(imageObject.width, Math.max(imageObject.height - 50, 10));
-                const region = new Region(0, 0, entirePageSize.getWidth(), entirePageSize.getHeight());
-                let screenshotParts = region.getSubRegions(screenshotPartSize, false);
+            const partImageSize = new RectangleSize(image.getWidth(), Math.max(image.getHeight() - 50, 10));
+            const entirePage = new Region(Location.ZERO, entireSize);
+            let imageParts = entirePage.getSubRegions(partImageSize);
 
-                let parts = [];
-                let promise = promiseFactory.resolve();
-                screenshotParts.forEach((part) => {
-                    promise = promise.then(() => {
-                        return promiseFactory.makePromise((resolve4) => {
-                            if (part.left === 0 && part.top === 0) {
-                                parts.push({
-                                    image: imageObject.imageBuffer,
-                                    size: {width: imageObject.width, height: imageObject.height},
-                                    position: {x: 0, y: 0}
-                                });
+            screenshot = MutableImage.newImage(entireSize.getWidth(), entireSize.getHeight(), promiseFactory);
+            return imageParts.reduce((promise, partRegion) => {
+                return promise.then(() => {
+                    if (partRegion.getLeft() === 0 && partRegion.getTop() === 0) {
+                        return screenshot.copyRasterData(0, 0, screenshot);
+                    }
 
-                                resolve4();
-                                return;
-                            }
-
-                            let currentPosition;
-                            let partCoords = {x: part.left, y: part.top};
-                            return EyesSeleniumUtils.setCurrentScrollPosition(driver, partCoords).then(() => {
-                                return EyesSeleniumUtils.getCurrentScrollPosition(driver).then((position) => {
-                                    currentPosition = position;
-                                });
-                            }).then(() => {
-                                return EyesSeleniumUtils.captureViewport(driver, scaleProviderFactory, promiseFactory);
-                            }).then((partImage) => {
-                                return partImage.asObject().then((newImageObjects) => {
-                                    parts.push({
-                                        image: newImageObjects.imageBuffer,
-                                        size: {width: newImageObjects.width, height: newImageObjects.height},
-                                        position: {x: currentPosition.x, y: currentPosition.y}
-                                    });
-
-                                    resolve4();
-                                });
+                    let currentPosition;
+                    return EyesSeleniumUtils.setCurrentScrollPosition(driver, partRegion.getLocation()).then(() => {
+                        return GeneralUtils.sleep(100, promiseFactory).then(() => {
+                            return EyesSeleniumUtils.getCurrentScrollPosition(driver).then(currentPosition_ => {
+                                currentPosition = currentPosition_;
                             });
                         });
+                    }).then(() => {
+                        return EyesSeleniumUtils.captureViewport(driver, scaleProviderFactory, promiseFactory);
+                    }).then(partImage => {
+                        return screenshot.copyRasterData(currentPosition.getX(), currentPosition.getY(), partImage);
                     });
                 });
-
-                return promise.then(() => {
-                    return ImageUtils.stitchImage(entirePageSize, parts, promiseFactory).then((stitchedBuffer) => {
-                        screenshot = new MutableImage(stitchedBuffer, promiseFactory);
-                        resolve2();
-                    });
-                });
-            });
+            }, promiseFactory.resolve());
         }).then(() => {
             return EyesSeleniumUtils.setCurrentScrollPosition(driver, originalPosition);
         }).then(() => {
