@@ -12,7 +12,7 @@ const StorybookUtils = require('../src/StorybookUtils');
 
 const VERSION = require('../package.json').version;
 const DEFAULT_CONFIG_PATH = 'applitools.config.js';
-
+const EYES_TEST_FAILED_EXIT_CODE = 130;
 
 /* --- Create CLI --- */
 let yargs = require('yargs')
@@ -149,6 +149,7 @@ if (configs.useRenderer) {
 
 /* --- Prepare and display results --- */
 return promise.then(/** TestResults[] */ results => {
+    let exitCode = 0;
     if (results.length > 0) {
         console.log('\n');
         console.log('[EYES: TEST RESULTS]:');
@@ -161,6 +162,10 @@ return promise.then(/** TestResults[] */ results => {
                 console.log(storyTitle, colors.green("Passed"));
             } else {
                 console.log(storyTitle, colors.red(`Failed ${result.getMismatches() + result.getMissing()} of ${result.getSteps()}`));
+
+                if (exitCode < EYES_TEST_FAILED_EXIT_CODE) {
+                    exitCode = EYES_TEST_FAILED_EXIT_CODE;
+                }
             }
         });
         console.log("See details at", results[0].getAppUrls().batch);
@@ -168,8 +173,8 @@ return promise.then(/** TestResults[] */ results => {
         console.log("Test is finished but no results returned.");
     }
 
-    process.exit();
-}).catch(function(err) {
+    process.exit(exitCode);
+}).catch(err => {
     console.error(err.message || err.toString());
     if (yargs.debug) {
         console.error('DEBUG:', err.stack);
