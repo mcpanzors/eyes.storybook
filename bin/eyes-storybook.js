@@ -13,6 +13,7 @@ const StorybookUtils = require('../src/StorybookUtils');
 const VERSION = require('../package.json').version;
 const DEFAULT_CONFIG_PATH = 'applitools.config.js';
 const EYES_TEST_FAILED_EXIT_CODE = 130;
+const SUPPORTED_STORYBOOK3_APPS = ['react', 'vue', 'react-native', 'angular', 'polymer'];
 
 /* --- Create CLI --- */
 let yargs = require('yargs')
@@ -84,8 +85,8 @@ if (!configs.apiKey) {
 if (!configs.maxRunningBrowsers && configs.maxRunningBrowsers !== 0) {
     throw new Error("maxRunningBrowsers should be defined.");
 }
-if (configs.storybookApp && !['react', 'vue'].includes(configs.storybookApp)) {
-    throw new Error('storybookApp should be "react" or "vue".');
+if (configs.storybookApp && !SUPPORTED_STORYBOOK3_APPS.includes(configs.storybookApp)) {
+    throw new Error(`storybookApp should be one of [${SUPPORTED_STORYBOOK3_APPS}].`);
 }
 if (configs.storybookVersion && ![2, 3].includes(configs.storybookVersion)) {
     throw new Error('storybookVersion should be 2 or 3.');
@@ -113,7 +114,7 @@ if (!fs.existsSync(packageJsonPath)) {
     throw new Error('package.json not found on path: ' + packageJsonPath);
 }
 const packageJson = require(packageJsonPath);
-const packageVersion = StorybookUtils.retrieveStorybookVersion(packageJson);
+const packageVersion = StorybookUtils.retrieveStorybookVersion(packageJson, SUPPORTED_STORYBOOK3_APPS);
 if (!configs.appName) configs.appName = packageJson.name;
 if (!configs.storybookApp) configs.storybookApp = packageVersion.app;
 if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version;

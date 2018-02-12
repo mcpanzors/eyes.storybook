@@ -185,9 +185,10 @@ class StorybookUtils {
 
     /**
      * @param {object} json
-     * @returns {{ app: string, version: number}}
+     * @param {array<string>} supportedStorybookApps
+     * @returns {{app: string, version: number}}
      */
-    static retrieveStorybookVersion(json) {
+    static retrieveStorybookVersion(json, supportedStorybookApps) {
         // noinspection JSUnresolvedVariable
         const dependencies = json.dependencies || {};
         // noinspection JSUnresolvedVariable
@@ -195,13 +196,18 @@ class StorybookUtils {
 
         if (dependencies['@kadira/storybook'] || devDependencies['@kadira/storybook']) {
             return {app: 'react', version: 2};
-        } else if (dependencies['@storybook/react'] || devDependencies['@storybook/react']) {
-            return {app: 'react', version: 3};
-        } else if (dependencies['@storybook/vue'] || devDependencies['@storybook/vue']) {
-            return {app: 'vue', version: 3};
         } else {
-            throw new Error('Storybook module not found in package.json!');
+            const version = 3;
+            for (let i = 0, l = supportedStorybookApps.length; i < l; ++i) {
+                const app = supportedStorybookApps[i];
+
+                if (dependencies['@storybook/' + app] || devDependencies['@storybook/' + app]) {
+                    return {app, version};
+                }
+            }
         }
+
+        throw new Error('Storybook module not found in package.json!');
     }
 }
 

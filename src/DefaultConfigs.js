@@ -12,7 +12,7 @@ module.exports = {
                            // default 0 - is not limited for rendering server or number of viewportSizes for browsers
 
     /* Storybook configuration */
-    storybookApp: null, // [react, vue]
+    storybookApp: null, // [react, vue, react-native, angular, polymer]
     storybookVersion: null, // [2, 3]
     storybookConfigDir: '.storybook',
     storybookStaticDir: null,
