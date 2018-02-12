@@ -290,9 +290,13 @@ const waitForStorybookStarted = (logger, promiseFactory, storybookProcess, story
 
         const checkAddress = (data) => {
             const str = data.toString('utf8').trim();
+            if (str.includes('Error: listen EADDRINUSE :::')) {
+                return reject("Storybook port already in use.");
+            }
+
             if (str.includes(storybookAddress)) {
                 logger.log('Starting Storybook server done.');
-                resolve(storybookAddress);
+                return resolve(storybookAddress);
             }
         };
 
