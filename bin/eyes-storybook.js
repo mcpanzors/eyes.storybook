@@ -37,7 +37,12 @@ let yargs = require('yargs')
         },
         debug: {
             alias: 'd',
-            description: 'Debug mode',
+            description: 'Debug mode, display all possible logs',
+            requiresArg: false,
+            boolean: true
+        },
+        verbose: {
+            description: 'Display more detailed logs',
             requiresArg: false,
             boolean: true
         }
@@ -54,19 +59,23 @@ if (yargs.version) {
 
 /* --- Load configuration from config file --- */
 let configs;
+console.log(`Used eyes.storybook of version ${VERSION}.`);
 const configsPath = path.resolve(process.cwd(), yargs.conf);
 if (fs.existsSync(configsPath)) {
-    console.log('Loading configuration from "' + configsPath + '"...');
     configs = Object.assign(defaultConfigs, require(configsPath));
+    console.log(`Configuration was loaded from "${configsPath}".`);
 } else if (yargs.conf !== DEFAULT_CONFIG_PATH) {
-    throw new Error('Config file cannot be found in "' + configsPath + '".');
+    throw new Error(`Configuration file cannot be found in "${configsPath}".`);
 } else {
     configs = defaultConfigs;
 }
-if (yargs.debug) {
+if (yargs.verbose || yargs.debug) {
     configs.showLogs = 'verbose';
-    configs.showEyesSdkLogs = 'verbose';
     configs.showStorybookOutput = true;
+
+    if (yargs.debug) {
+        configs.showEyesSdkLogs = 'verbose';
+    }
 }
 
 
@@ -118,7 +127,7 @@ const packageVersion = StorybookUtils.retrieveStorybookVersion(packageJson, SUPP
 if (!configs.appName) configs.appName = packageJson.name;
 if (!configs.storybookApp) configs.storybookApp = packageVersion.app;
 if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version;
-
+console.log(`Used storybook/${configs.storybookApp} of version ${configs.storybookVersion}.`);
 
 /* --- Main execution flow --- */
 let promise = promiseFactory.resolve();
@@ -138,7 +147,6 @@ if (configs.useRenderer) {
     promise = promise.then(() => {
         return StorybookUtils.startServer(logger, promiseFactory, configs);
     }).then(storybookAddress => {
-        logger.log('Starting Storybook server - done.');
         configs.storybookAddress = storybookAddress;
         return StorybookUtils.getStoriesFromWeb(logger, promiseFactory, configs);
     }).then(stories => {

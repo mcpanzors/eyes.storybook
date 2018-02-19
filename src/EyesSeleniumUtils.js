@@ -188,12 +188,13 @@ class EyesSeleniumUtils extends EyesJsBrowserUtils {
     };
 
     /**
+     * @param logger
      * @param driver
      * @param {ScaleProviderFactory} scaleProviderFactory
      * @param {PromiseFactory} promiseFactory
      * @return {Promise<MutableImage>}
      */
-    static getScreenshot(driver, scaleProviderFactory, promiseFactory) {
+    static getScreenshot(logger, driver, scaleProviderFactory, promiseFactory) {
         let entireSize, originalPosition, screenshot;
         return EyesSeleniumUtils.getCurrentFrameContentEntireSize(driver).then(contentSize => {
             entireSize = contentSize;

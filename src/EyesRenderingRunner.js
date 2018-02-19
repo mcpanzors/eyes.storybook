@@ -30,20 +30,26 @@ class EyesRenderingRunner {
      */
     testStories(stories) {
         this._logger.log('Splitting stories for multiple parts...');
+
         const maxThreads = this._configs.maxRunningBrowsers;
         const threadsCount = (maxThreads === 0 || maxThreads > stories.length) ? stories.length : maxThreads;
 
         const storiesParts = [];
-        let storiesMod = stories.length % threadsCount;
+        const storiesMod = stories.length % threadsCount;
         const storiesPerThread = (stories.length - storiesMod) / threadsCount;
-        let startStory, endStory = 0;
+        let startStory = 0, endStory = 0, modLeft = storiesMod;
         for (let i = 0; i < threadsCount; ++i) {
             startStory = endStory;
-            endStory = startStory + storiesPerThread + (storiesMod-- > 0 ? 1 : 0);
+            if (modLeft > 0) {
+                modLeft--;
+                endStory = startStory + storiesPerThread + 1;
+            } else {
+                endStory = startStory + storiesPerThread;
+            }
             storiesParts.push(stories.slice(startStory, endStory));
         }
-        this._logger.log(`Stories have been slitted for ${threadsCount} parts.`);
-        this._logger.verbose(`Stories per thread: ${storiesPerThread}${storiesMod ? ('-' + (storiesPerThread + 1)) : ''}`);
+
+        this._logger.log(`Stories were slitted for ${threadsCount} parts. Stories per thread: ${storiesPerThread}${storiesMod ? ('-' + (storiesPerThread + 1)) : ''}`);
 
         const firstStory = storiesParts[0][0];
         storiesParts[0].shift();
@@ -52,13 +58,13 @@ class EyesRenderingRunner {
         const storiesPromises = [];
         let firstStoryPromise;
         return that._promiseFactory.makePromise(resolve => {
-            that._logger.log('Starting processing first story, to prepare resources and DOM...');
+            that._logger.verbose('Starting processing first story, to prepare resources and DOM...');
             firstStoryPromise = that.testStory(firstStory, 0, 0, () => resolve());
             storiesPromises.push(firstStoryPromise);
         }).then(() => {
-            that._logger.log('Resources and DOM have been prepared and sent to the server.');
+            that._logger.verbose('Resources and DOM were prepared and sent to the server.');
             const threadsPromises = [];
-            that._logger.log(`Starting rest ${stories.length} threads for processing stories...`);
+            that._logger.verbose(`Starting rest ${stories.length} threads for processing stories...`);
             storiesParts.forEach((stories, i) => {
                 let threadPromise = i === 0 ? firstStoryPromise : that._promiseFactory.resolve();
                 stories.forEach((story, j) => {
@@ -72,8 +78,8 @@ class EyesRenderingRunner {
             });
             return that._promiseFactory.all(threadsPromises);
         }).then(() => {
-            that._logger.log(`All stories have been processed.`);
-            return Promise.all(storiesPromises);
+            that._logger.log(`All stories were processed.`);
+            return that._promiseFactory.all(storiesPromises);
         });
     }
 
@@ -86,27 +92,27 @@ class EyesRenderingRunner {
      * @returns {Promise.<TestResults>}
      */
     testStory(story, i, j, startNextCallback) {
-        this._logger.verbose(`[${i}] Starting processing story ${story.getCompoundTitleWithViewportSize()}...`);
+        this._logger.log(`[${i}] Starting processing story ${story.getCompoundTitleWithViewportSize()}...`);
 
         const that = this;
         let promise = this._promiseFactory.resolve();
         if (!that._domNodes) {
             promise = promise.then(() => {
-                that._logger.verbose(`[${i}] Collecting resources...`);
+                that._logger.log(`[${i}] Collecting resources...`);
                 that._resources = readResourcesFromDir(that._configs.storybookOutputDir);
-                that._logger.verbose(`[${i}] Resources have been collected and cached.`);
-                that._logger.verbose(`[${i}] Preparing DOM...`);
+                that._logger.log(`[${i}] Resources were collected and cached.`);
+
+                that._logger.log(`[${i}] Preparing DOM...`);
                 const domRootHtml = fs.readFileSync(path.join(that._configs.storybookOutputDir, 'iframe.html'));
                 return StorybookUtils.getDocumentFromHtml(that._promiseFactory, domRootHtml).then(document => {
                     const nodes = document.querySelectorAll('*');
                     that._domNodes = EyesRenderingUtils.domNodesToCdt(Array.from(nodes).slice(0, 1));
-                    that._logger.verbose(`[${i}] DOM have been prepared and cached.`);
+                    that._logger.log(`[${i}] DOM was prepared and cached.`);
                 });
             });
         }
 
         return promise.then(() => {
-            that._logger.verbose(`[${i}] Preparing Eyes instance...`);
             const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory);
             eyes.setApiKey(that._configs.apiKey);
             eyes.setRender(true);
@@ -121,6 +127,8 @@ class EyesRenderingRunner {
 
             that._logger.verbose(`[${i}] Opening Eyes session...`);
             return eyes.open(that._configs.appName, story.getCompoundTitle(), story.getViewportSize()).then(() => {
+                that._logger.verbose(`[${i}] Session was created.`);
+
                 const dom = new RGridDom();
                 dom.setResources(that._resources);
                 dom.setDomNodes(that._domNodes);
@@ -129,7 +137,7 @@ class EyesRenderingRunner {
                 that._logger.verbose(`[${i}] Sending Rendering requests...`);
                 return eyes.renderWindow(dom);
             }).then(imageLocation => {
-                that._logger.verbose(`[${i}] Render have been finished.`);
+                that._logger.verbose(`[${i}] Render was finished.`);
                 if (startNextCallback) {
                     startNextCallback();
                 }
@@ -137,10 +145,14 @@ class EyesRenderingRunner {
                 that._logger.verbose(`[${i}] Sending check request...`);
                 return eyes.checkUrl(imageLocation, story.getCompoundTitle());
             }).then(() => {
+                that._logger.verbose(`[${i}] Screenshot was sent.`);
+
                 that._logger.verbose(`[${i}] Sending close request...`);
                 return eyes.close(false);
             }).then(results => {
-                that._logger.log(`[${i}] Story ${story.getCompoundTitleWithViewportSize()} have been processed.`);
+                that._logger.verbose(`[${i}] Session was closed.`);
+
+                that._logger.log(`[${i}] Story ${story.getCompoundTitleWithViewportSize()} was processed.`);
                 return results;
             });
         });

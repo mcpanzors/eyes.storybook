@@ -21,19 +21,19 @@ class StorybookUtils {
      */
     static startServer(logger, promiseFactory, configs) {
         if (configs.storybookAddress) {
-            logger.log('storybookAddress set, starting server skipped.');
+            logger.log('storybookAddress set, starting Storybook skipped.');
             return promiseFactory.resolve(configs.storybookAddress);
         }
 
-        logger.log('Starting Storybook server...');
+        logger.log('Starting Storybook...');
+
         let storybookPath = path.resolve(process.cwd(), 'node_modules/.bin/start-storybook' + (IS_WINDOWS ? '.cmd' : ''));
 
         // start Storybook dev server
-        let storybookHost = 'localhost';
+        const storybookHost = 'localhost';
         let storybookPort = 9001;
         if (configs.storybookPort) {
             storybookPort = configs.storybookPort;
-            logger.log('Use custom Storybook port: ' + storybookPort);
         }
 
         const args = ['--port', storybookPort, '--config-dir', configs.storybookConfigDir];
@@ -87,7 +87,10 @@ class StorybookUtils {
         process.on('SIGTERM', () => process.exit());
         process.on('uncaughtException', () => process.exit(1));
 
-        return waitForStorybookStarted(promiseFactory, storybookProcess, storybookHost, storybookPort);
+        return waitForStorybookStarted(promiseFactory, storybookProcess).then(() => {
+            logger.log('Storybook was started.');
+            return `http://${storybookHost}:${storybookPort}/`;
+        });
     };
 
     /**
@@ -125,11 +128,11 @@ class StorybookUtils {
         logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
         execSync(storybookPath, args);
 
-        logger.log('Building Storybook done.');
         if (isConfigOverridden) {
             fs.writeFileSync(storybookConfigPath, storybookConfigBody, {encoding: 'utf8'});
         }
 
+        logger.log('Storybook was built.');
         return promiseFactory.resolve();
     };
 
@@ -140,10 +143,15 @@ class StorybookUtils {
      * @returns {Promise.<StorybookStory[]>}
      */
     static getStoriesFromWeb(logger, promiseFactory, configs) {
-        logger.log('Getting stories from running storybook...');
+        logger.log('Getting stories from storybook server...');
+
         return axios.get(configs.storybookAddress + 'static/preview.bundle.js', {timeout: 5000}).then(response => {
             const previewCode = response.data;
+            logger.log('Storybook code was received from server.');
             return prepareStories(logger, promiseFactory, configs, previewCode);
+        }).then(stories => {
+            logger.log('Stories were prepared.');
+            return stories;
         });
     }
 
@@ -162,7 +170,11 @@ class StorybookUtils {
         });
 
         const previewCode = fs.readFileSync(path.resolve(staticDirPath, previewFile), 'utf8');
-        return prepareStories(logger, promiseFactory, configs, previewCode);
+        logger.log('Storybook code was loaded from build.');
+        return prepareStories(logger, promiseFactory, configs, previewCode).then(stories => {
+            logger.log('Stories were prepared.');
+            return stories;
+        });
     }
 
     /**
@@ -257,10 +269,8 @@ const getStorybookInstance = (promiseFactory, configs, previewCode) => {
  * @returns {Promise<StorybookStory[]>}
  */
 const prepareStories = (logger, promiseFactory, configs, previewCode) => {
-    logger.log('Getting stories from storybook instance...');
-
     return getStorybookInstance(promiseFactory, configs, previewCode).then(storybook => {
-        logger.log('Extracting stories...');
+        logger.log('Storybook instance was created.');
 
         const stories = [];
         for (const group of storybook) {
@@ -269,17 +279,20 @@ const prepareStories = (logger, promiseFactory, configs, previewCode) => {
             }
         }
 
+        logger.log('Storied were extracted.');
+
         if (!configs.viewportSize) {
             return stories;
         }
 
-        logger.log('Mixing stories with viewportSize...');
         const newStories = [];
         for (const viewportSize of configs.viewportSize) {
             for (const story of stories) {
                 newStories.push(new StorybookStory(story.getComponentName(), story.getState(), new RectangleSize(viewportSize)));
             }
         }
+
+        logger.log('Storied were mixed with viewportSize(s).');
         return newStories;
     });
 };
@@ -287,11 +300,9 @@ const prepareStories = (logger, promiseFactory, configs, previewCode) => {
 /**
  * @param {PromiseFactory} promiseFactory
  * @param {ChildProcess} storybookProcess
- * @param {String} storybookHost
- * @param {Number} storybookPort
  * @return {Promise<string>}
  */
-const waitForStorybookStarted = (promiseFactory, storybookProcess, storybookHost, storybookPort) => {
+const waitForStorybookStarted = (promiseFactory, storybookProcess) => {
     return promiseFactory.makePromise((resolve, reject) => {
         storybookProcess.stdout.on('data', data => stdoutListener(bufferToString(data)));
         storybookProcess.stderr.on('data', data => stderrListener(bufferToString(data)));
@@ -304,7 +315,7 @@ const waitForStorybookStarted = (promiseFactory, storybookProcess, storybookHost
 
         const stdoutListener = (str) => {
             if (str.includes('webpack built')) {
-                return resolve(`http://${storybookHost}:${storybookPort}/`);
+                return resolve();
             }
         };
 

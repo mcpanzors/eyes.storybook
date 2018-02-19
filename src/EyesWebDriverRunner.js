@@ -2,9 +2,10 @@
 
 require('chromedriver');
 const {Builder} = require('selenium-webdriver');
-const {BatchInfo, ConsoleLogHandler} = require('@applitools/eyes.sdk.core');
+const {BatchInfo, ConsoleLogHandler, Logger} = require('@applitools/eyes.sdk.core');
 
 const EyesStorybook = require('./EyesStorybook');
+const StorybookUtils = require('./StorybookUtils');
 const EyesSeleniumUtils = require('./EyesSeleniumUtils');
 
 class EyesWebDriverRunner {
@@ -20,6 +21,11 @@ class EyesWebDriverRunner {
         this._testBatch = new BatchInfo(configs.appName);
         this._inferred = null;
         this._scaleProviderFactory = null;
+
+        this._eyesSdkLogger = new Logger();
+        if (this._configs.showEyesSdkLogs) {
+            this._eyesSdkLogger.setLogHandler(new ConsoleLogHandler(this._configs.showEyesSdkLogs === 'verbose'));
+        }
     }
 
     /**
@@ -28,21 +34,27 @@ class EyesWebDriverRunner {
      */
     testStories(stories) {
         this._logger.log('Splitting stories for multiple parts...');
+
         const maxThreads = this._configs.maxRunningBrowsers;
         const defaultThreads = this._configs.viewportSize ? this._configs.viewportSize.length : 1;
         const threadsCount = maxThreads === 0 ? defaultThreads : (maxThreads > stories.length ? stories.length : maxThreads);
 
         const storiesParts = [];
-        let storiesMod = stories.length % threadsCount;
+        const storiesMod = stories.length % threadsCount;
         const storiesPerThread = (stories.length - storiesMod) / threadsCount;
-        let startStory, endStory = 0;
+        let startStory = 0, endStory = 0, modLeft = storiesMod;
         for (let i = 0; i < threadsCount; ++i) {
             startStory = endStory;
-            endStory = startStory + storiesPerThread + (storiesMod-- > 0 ? 1 : 0);
+            if (modLeft > 0) {
+                modLeft--;
+                endStory = startStory + storiesPerThread + 1;
+            } else {
+                endStory = startStory + storiesPerThread;
+            }
             storiesParts.push(stories.slice(startStory, endStory));
         }
-        this._logger.log(`Stories have been slitted for ${threadsCount} parts.`);
-        this._logger.verbose(`Stories per thread: ${storiesPerThread}${storiesMod ? ('-' + (storiesPerThread + 1)) : ''}`);
+
+        this._logger.log(`Stories were slitted for ${threadsCount} parts. Stories per thread: ${storiesPerThread}${storiesMod ? ('-' + (storiesPerThread + 1)) : ''}`);
 
         const firstStory = storiesParts[0][0];
         storiesParts[0].shift();
@@ -51,14 +63,14 @@ class EyesWebDriverRunner {
         const storiesPromises = [];
         let firstStoryDriver, firstStoryPromise;
         return that._promiseFactory.makePromise(resolve => {
-            that._logger.log('Starting processing first story, to retrieve userAgent and scaling factor...');
+            that._logger.verbose('Starting processing first story, to retrieve userAgent and scaling factor...');
             firstStoryDriver = this.createWebDriver();
             firstStoryPromise = that.testStory(firstStoryDriver, firstStory, 0, 0, () => resolve());
             storiesPromises.push(firstStoryPromise);
         }).then(() => {
-            that._logger.log('UserAgent and scaling factor have been retrieved.');
+            that._logger.verbose('UserAgent and scaling factor were retrieved from the server.');
             const threadsPromises = [];
-            that._logger.log(`Starting rest ${stories.length} threads for processing stories...`);
+            that._logger.verbose(`Starting rest ${stories.length} threads for processing stories...`);
             storiesParts.forEach((stories, i) => {
                 let threadPromise, driver;
                 if (i === 0) {
@@ -80,8 +92,8 @@ class EyesWebDriverRunner {
             });
             return that._promiseFactory.all(threadsPromises);
         }).then(() => {
-            that._logger.log(`All stories have been processed.`);
-            return Promise.all(storiesPromises);
+            that._logger.log(`All stories were processed.`);
+            return that._promiseFactory.all(storiesPromises);
         });
     }
 
@@ -95,22 +107,23 @@ class EyesWebDriverRunner {
      * @returns {Promise.<TestResults>}
      */
     testStory(driver, story, i, j, startNextCallback) {
-        this._logger.verbose(`[${i}] Starting processing story ${story.getCompoundTitleWithViewportSize()}...`);
+        this._logger.log(`[${i}] Starting processing story ${story.getCompoundTitleWithViewportSize()}...`);
 
         const that = this;
         let promise = this._promiseFactory.resolve();
         if (!that._inferred) {
             promise = promise.then(() => {
-                that._logger.verbose(`[${i}] Retrieving userAgent...`);
+                that._logger.log(`[${i}] Retrieving userAgent...`);
                 return driver.executeScript('return navigator.userAgent;');
             }).then(userAgent => {
                 that._inferred = 'useragent:' + userAgent;
-                that._logger.verbose(`[${i}] UserAgent have been retrieved and cached.`);
-                that._logger.verbose(`[${i}] Retrieving scaling params...`);
-                return EyesSeleniumUtils.updateScalingParams(that._logger, driver);
+                that._logger.log(`[${i}] UserAgent was retrieved and cached.`);
+
+                that._logger.log(`[${i}] Retrieving scaling params...`);
+                return EyesSeleniumUtils.updateScalingParams(that._eyesSdkLogger, driver);
             }).then(scaleProviderFactory => {
                 that._scaleProviderFactory = scaleProviderFactory;
-                that._logger.verbose(`[${i}] Scaling params have been retrieved and cached.`);
+                that._logger.log(`[${i}] Scaling params were retrieved and cached.`);
             });
         }
 
@@ -120,41 +133,46 @@ class EyesWebDriverRunner {
             }
 
             if (story.getViewportSize()) {
-                that._logger.verbose(`[${i}] Changing viewport size of the driver...`);
-                return EyesSeleniumUtils.setViewportSize(that._logger, driver, story.getViewportSize()).then(() => {
-                    that._logger.verbose(`[${i}] Viewport size have been changed.`);
+                that._logger.verbose(`[${i}] Changing viewport size of the browser...`);
+                return EyesSeleniumUtils.setViewportSize(that._eyesSdkLogger, driver, story.getViewportSize()).then(() => {
+                    that._logger.verbose(`[${i}] Viewport size was changed.`);
                 });
             }
         }).then(() => {
             const navigateTo = story.getStorybookUrl(that._configs.storybookAddress);
-            that._logger.verbose(`[${i}] Navigation driver to ${navigateTo}...`);
+            that._logger.verbose(`[${i}] Navigation browser to ${navigateTo}...`);
             return driver.get(navigateTo);
         }).then(() => {
-            that._logger.verbose(`[${i}] Capturing screenshot...`);
-            return EyesSeleniumUtils.getScreenshot(driver, that._scaleProviderFactory, that._promiseFactory);
-        }).then(screenshot => {
-            that._logger.log(`[${i}] Screenshot have been created.`);
+            that._logger.verbose(`[${i}] Page was opened.`);
 
-            that._logger.verbose(`[${i}] Preparing Eyes instance...`);
+            that._logger.verbose(`[${i}] Capturing screenshot...`);
+            return EyesSeleniumUtils.getScreenshot(that._eyesSdkLogger, driver, that._scaleProviderFactory, that._promiseFactory);
+        }).then(screenshot => {
+            that._logger.verbose(`[${i}] Screenshot was created.`);
+
             const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory);
             eyes.setApiKey(that._configs.apiKey);
             eyes.setBatch(that._testBatch);
             eyes.addProperty("Component name", story.getComponentName());
             eyes.addProperty("State", story.getState());
             eyes.setInferredEnvironment(that._inferred);
-            if (that._configs.showEyesSdkLogs) {
-                eyes.setLogHandler(new ConsoleLogHandler(that._configs.showEyesSdkLogs === 'verbose'));
-            }
+            eyes.setLogHandler(that._eyesSdkLogger.getLogHandler());
 
             that._logger.verbose(`[${i}] Opening Eyes session...`);
             return eyes.open(that._configs.appName, story.getCompoundTitle(), story.getViewportSize()).then(() => {
+                that._logger.verbose(`[${i}] Session was created.`);
+
                 that._logger.verbose(`[${i}] Sending check request...`);
                 return eyes.checkImage(screenshot, story.getCompoundTitle());
             }).then(() => {
+                that._logger.verbose(`[${i}] Screenshot was sent.`);
+
                 that._logger.verbose(`[${i}] Sending close request...`);
                 return eyes.close(false);
             }).then(results => {
-                that._logger.log(`[${i}] Story ${story.getCompoundTitleWithViewportSize()} have been processed.`);
+                that._logger.verbose(`[${i}] Session was closed.`);
+
+                that._logger.log(`[${i}] Story ${story.getCompoundTitleWithViewportSize()} was processed.`);
                 return results;
             });
         });
