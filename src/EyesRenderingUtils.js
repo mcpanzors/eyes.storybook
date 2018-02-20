@@ -39,7 +39,7 @@ const elementNodeFactory = (domNodes, elementNode) => {
         node = {
             nodeType: NODE_TYPES.ELEMENT,
             nodeName: elementNode.nodeName,
-            attributes: Object.entries(elementNode.attributes).map(([name, value]) => ({name: value.localName, value: value.value})),
+            attributes: objectEntries(elementNode.attributes).map(([name, value]) => ({name: value.localName, value: value.value})),
             childNodeIndexes: elementNode.childNodes.length ? childrenFactory(domNodes, elementNode.childNodes) : []
         };
     } else if (elementNode.nodeType === NODE_TYPES.TEXT) {
@@ -58,6 +58,14 @@ const elementNodeFactory = (domNodes, elementNode) => {
 
     domNodes.push(node);
     return domNodes.length - 1;
+};
+
+const objectEntries = (obj) => {
+    const keys = Object.keys(obj);
+    let i = keys.length;
+    const results = new Array(i);
+    while (i--) results[i] = [keys[i], obj[keys[i]]];
+    return results;
 };
 
 module.exports = EyesRenderingUtils;

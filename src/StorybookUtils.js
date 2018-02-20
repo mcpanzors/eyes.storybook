@@ -179,7 +179,7 @@ class StorybookUtils {
 
     /**
      * @param {PromiseFactory} promiseFactory
-     * @param {String} htmlContent
+     * @param {Buffer} htmlContent
      * @returns {Promise.<any>}
      */
     static getDocumentFromHtml(promiseFactory, htmlContent) {
