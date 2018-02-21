@@ -20,8 +20,7 @@ class EyesRenderingRunner {
         this._configs = configs;
 
         this._testBatch = new BatchInfo(configs.appName);
-        this._domNodes = null;
-        this._resources = null;
+        this._rGridDom = undefined;
     }
 
     /**
@@ -68,8 +67,10 @@ class EyesRenderingRunner {
 
             return StorybookUtils.getDocumentFromHtml(that._promiseFactory, iframeResource.getContent()).then(document => {
                 const nodes = document.querySelectorAll('*');
-                this._domNodes = EyesRenderingUtils.domNodesToCdt(Array.from(nodes).slice(0, 1));
-                this._resources = Array.from(resources.values());
+
+                that._rGridDom = new RGridDom();
+                that._rGridDom.setResources(Array.from(resources.values()));
+                that._rGridDom.setDomNodes(EyesRenderingUtils.domNodesToCdt(Array.from(nodes).slice(0, 1)));
                 that._logger.log(`DOM was prepared and cached.`);
             });
         }).then(() => {
@@ -128,14 +129,8 @@ class EyesRenderingRunner {
             that._logger.verbose(`[${i}] Opening Eyes session...`);
             return eyes.open(that._configs.appName, story.getCompoundTitle(), story.getViewportSize()).then(() => {
                 that._logger.verbose(`[${i}] Session was created.`);
-
-                const dom = new RGridDom();
-                dom.setResources(that._resources);
-                dom.setDomNodes(that._domNodes);
-                dom.setUrl(story.getStorybookUrl('http://localhost/'));
-
                 that._logger.verbose(`[${i}] Sending Rendering requests...`);
-                return eyes.renderWindow(dom);
+                return eyes.renderWindow(story.getStorybookUrl('http://localhost/'), that._rGridDom);
             }).then(imageLocation => {
                 that._logger.verbose(`[${i}] Render was finished.`);
                 if (startNextCallback) {
