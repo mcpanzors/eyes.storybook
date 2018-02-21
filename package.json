@@ -21,13 +21,13 @@
   },
   "dependencies": {
     "@applitools/eyes.sdk.core": "^1.1.0",
-    "chromedriver": "^2.34.1",
+    "chromedriver": "^2.35.0",
     "selenium-webdriver": "^3.6.0",
-    "axios": "^0.17.1",
+    "axios": "^0.18.0",
     "yargs": "^8.0.2",
-    "jsdom": "^11.1.0",
+    "jsdom": "^11.6.2",
     "colors": "^1.1.2",
-    "mime-types": "^2.1.17"
+    "mime-types": "^2.1.18"
   },
   "engines": {
     "node": ">=6.9.0"
