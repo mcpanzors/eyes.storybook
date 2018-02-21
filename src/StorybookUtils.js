@@ -21,19 +21,19 @@ class StorybookUtils {
      */
     static startServer(logger, promiseFactory, configs) {
         if (configs.storybookAddress) {
-            logger.log('storybookAddress set, starting server skipped.');
+            logger.log('storybookAddress set, starting Storybook skipped.');
             return promiseFactory.resolve(configs.storybookAddress);
         }
 
-        logger.log('Starting Storybook server...');
+        logger.log('Starting Storybook...');
+
         let storybookPath = path.resolve(process.cwd(), 'node_modules/.bin/start-storybook' + (IS_WINDOWS ? '.cmd' : ''));
 
         // start Storybook dev server
-        let storybookHost = 'localhost';
+        const storybookHost = 'localhost';
         let storybookPort = 9001;
         if (configs.storybookPort) {
             storybookPort = configs.storybookPort;
-            logger.log('Use custom Storybook port: ' + storybookPort);
         }
 
         const args = ['--port', storybookPort, '--config-dir', configs.storybookConfigDir];
@@ -55,21 +55,21 @@ class StorybookUtils {
             isConfigOverridden = true;
             let template = fs.readFileSync(`${__dirname}/configTemplates/storybook.v${configs.storybookVersion}.js`, 'utf8');
             template = template.replace('${configBody}', storybookConfigBody).replace('${app}', configs.storybookApp);
-            fs.writeFileSync(storybookConfigPath, template, 'utf8');
+            fs.writeFileSync(storybookConfigPath, template, {encoding: 'utf8'});
         }
 
         logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
         const storybookProcess = spawn(storybookPath, args, {detached: !IS_WINDOWS});
 
-        storybookProcess.stderr.on('data', data => { console.error(data.toString('utf8').trim()) });
+        storybookProcess.stderr.on('data', data => console.error(bufferToString(data)));
         if (configs.showStorybookOutput) {
-            storybookProcess.stdout.on('data', data => { console.log(data.toString('utf8').trim()) });
+            storybookProcess.stdout.on('data', data => console.log(bufferToString(data)));
         }
 
         // exit on terminate
         process.on('exit', () => {
             if (isConfigOverridden) {
-                fs.writeFileSync(storybookConfigPath, storybookConfigBody, 'utf8');
+                fs.writeFileSync(storybookConfigPath, storybookConfigBody, {encoding: 'utf8'});
             }
 
             try {
@@ -87,7 +87,10 @@ class StorybookUtils {
         process.on('SIGTERM', () => process.exit());
         process.on('uncaughtException', () => process.exit(1));
 
-        return waitForStorybookStarted(logger, promiseFactory, storybookProcess, `http://${storybookHost}:${storybookPort}/`);
+        return waitForStorybookStarted(promiseFactory, storybookProcess).then(() => {
+            logger.log('Storybook was started.');
+            return `http://${storybookHost}:${storybookPort}/`;
+        });
     };
 
     /**
@@ -119,17 +122,17 @@ class StorybookUtils {
             isConfigOverridden = true;
             let template = fs.readFileSync(`${__dirname}/configTemplates/storybook.v${configs.storybookVersion}.js`, 'utf8');
             template = template.replace('${configBody}', storybookConfigBody).replace('${app}', configs.storybookApp);
-            fs.writeFileSync(storybookConfigPath, template, 'utf8');
+            fs.writeFileSync(storybookConfigPath, template, {encoding: 'utf8'});
         }
 
         logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
         execSync(storybookPath, args);
 
-        logger.log('Building Storybook done.');
         if (isConfigOverridden) {
-            fs.writeFileSync(storybookConfigPath, storybookConfigBody, 'utf8');
+            fs.writeFileSync(storybookConfigPath, storybookConfigBody, {encoding: 'utf8'});
         }
 
+        logger.log('Storybook was built.');
         return promiseFactory.resolve();
     };
 
@@ -140,10 +143,15 @@ class StorybookUtils {
      * @returns {Promise.<StorybookStory[]>}
      */
     static getStoriesFromWeb(logger, promiseFactory, configs) {
-        logger.log('Getting stories from running storybook...');
+        logger.log('Getting stories from storybook server...');
+
         return axios.get(configs.storybookAddress + 'static/preview.bundle.js', {timeout: 5000}).then(response => {
             const previewCode = response.data;
+            logger.log('Storybook code was received from server.');
             return prepareStories(logger, promiseFactory, configs, previewCode);
+        }).then(stories => {
+            logger.log('Stories were prepared.');
+            return stories;
         });
     }
 
@@ -162,12 +170,16 @@ class StorybookUtils {
         });
 
         const previewCode = fs.readFileSync(path.resolve(staticDirPath, previewFile), 'utf8');
-        return prepareStories(logger, promiseFactory, configs, previewCode);
+        logger.log('Storybook code was loaded from build.');
+        return prepareStories(logger, promiseFactory, configs, previewCode).then(stories => {
+            logger.log('Stories were prepared.');
+            return stories;
+        });
     }
 
     /**
      * @param {PromiseFactory} promiseFactory
-     * @param {String} htmlContent
+     * @param {Buffer} htmlContent
      * @returns {Promise.<any>}
      */
     static getDocumentFromHtml(promiseFactory, htmlContent) {
@@ -185,21 +197,29 @@ class StorybookUtils {
 
     /**
      * @param {object} json
-     * @returns {{ app: string, version: number}}
+     * @param {array<string>} supportedStorybookApps
+     * @returns {{app: string, version: number}}
      */
-    static retrieveStorybookVersion(json) {
+    static retrieveStorybookVersion(json, supportedStorybookApps) {
+        // noinspection JSUnresolvedVariable
         const dependencies = json.dependencies || {};
+        // noinspection JSUnresolvedVariable
         const devDependencies = json.devDependencies || {};
 
         if (dependencies['@kadira/storybook'] || devDependencies['@kadira/storybook']) {
             return {app: 'react', version: 2};
-        } else if (dependencies['@storybook/react'] || devDependencies['@storybook/react']) {
-            return {app: 'react', version: 3};
-        } else if (dependencies['@storybook/vue'] || devDependencies['@storybook/vue']) {
-            return {app: 'vue', version: 3};
         } else {
-            throw new Error('Storybook module not found in package.json!');
+            const version = 3;
+            for (let i = 0, l = supportedStorybookApps.length; i < l; ++i) {
+                const app = supportedStorybookApps[i];
+
+                if (dependencies['@storybook/' + app] || devDependencies['@storybook/' + app]) {
+                    return {app, version};
+                }
+            }
         }
+
+        throw new Error('Storybook module not found in package.json!');
     }
 }
 
@@ -249,10 +269,8 @@ const getStorybookInstance = (promiseFactory, configs, previewCode) => {
  * @returns {Promise<StorybookStory[]>}
  */
 const prepareStories = (logger, promiseFactory, configs, previewCode) => {
-    logger.log('Getting stories from storybook instance...');
-
     return getStorybookInstance(promiseFactory, configs, previewCode).then(storybook => {
-        logger.log('Extracting stories...');
+        logger.log('Storybook instance was created.');
 
         const stories = [];
         for (const group of storybook) {
@@ -261,50 +279,55 @@ const prepareStories = (logger, promiseFactory, configs, previewCode) => {
             }
         }
 
+        logger.log('Storied were extracted.');
+
         if (!configs.viewportSize) {
             return stories;
         }
 
-        logger.log('Mixing stories with viewportSize...');
         const newStories = [];
         for (const viewportSize of configs.viewportSize) {
             for (const story of stories) {
                 newStories.push(new StorybookStory(story.getComponentName(), story.getState(), new RectangleSize(viewportSize)));
             }
         }
+
+        logger.log('Storied were mixed with viewportSize(s).');
         return newStories;
     });
 };
 
 /**
- * @param {Logger} logger
  * @param {PromiseFactory} promiseFactory
- * @param {any} storybookProcess
- * @param {String} storybookAddress
- * @return {Promise<String>}
+ * @param {ChildProcess} storybookProcess
+ * @return {Promise<string>}
  */
-const waitForStorybookStarted = (logger, promiseFactory, storybookProcess, storybookAddress) => {
+const waitForStorybookStarted = (promiseFactory, storybookProcess) => {
     return promiseFactory.makePromise((resolve, reject) => {
-        storybookProcess.stdout.on('data', data => checkAddress(data));
-        storybookProcess.stderr.on('data', data => checkAddress(data));
+        storybookProcess.stdout.on('data', data => stdoutListener(bufferToString(data)));
+        storybookProcess.stderr.on('data', data => stderrListener(bufferToString(data)));
 
-        const checkAddress = (data) => {
-            const str = data.toString('utf8').trim();
+        const stderrListener = (str) => {
             if (str.includes('Error: listen EADDRINUSE :::')) {
                 return reject("Storybook port already in use.");
             }
+        };
 
-            if (str.includes(storybookAddress)) {
-                logger.log('Starting Storybook server done.');
-                return resolve(storybookAddress);
+        const stdoutListener = (str) => {
+            if (str.includes('webpack built')) {
+                return resolve();
             }
         };
 
         // Set up the timeout
-        setTimeout(() => {
-            reject('Storybook din\'t start after 5 min waiting.');
-        }, 5 * 60 * 1000);
+        setTimeout(() => reject('Storybook din\'t start after 5 min waiting.'), 5 * 60 * 1000); // 5 min
     });
 };
+
+/**
+ * @param {Buffer} data
+ * @return {string}
+ */
+const bufferToString = (data) => data.toString('utf8').trim();
 
 module.exports = StorybookUtils;

@@ -12,7 +12,7 @@ module.exports = {
                            // default 0 - is not limited for rendering server or number of viewportSizes for browsers
 
     /* Storybook configuration */
-    storybookApp: null, // [react, vue]
+    storybookApp: null, // [react, vue, react-native, angular, polymer]
     storybookVersion: null, // [2, 3]
     storybookConfigDir: '.storybook',
     storybookStaticDir: null,
@@ -34,6 +34,6 @@ module.exports = {
 
     /* Logging  */
     showLogs: true, // [false, true, 'verbose'] // change to 'verbose' if you want to have more detailed logs
-    showEyesSdkLogs: false, // [false, true, 'verbose'] // enable if you want to see logs from eyes.sdk
-    showStorybookOutput: false, // enable if you want to see storybook output together with other logs
+    showEyesSdkLogs: false, // [false, true, 'verbose'] // enable if you want to see logs from eyes.sdk.core
+    showStorybookOutput: false, // enable if you want to see storybook server output
 };

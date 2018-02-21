@@ -1,6 +1,6 @@
 {
   "name": "@applitools/eyes.storybook",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Applitools Eyes SDK For Storybook",
   "author": "Applitools Team <team@applitools.com> (http://www.applitools.com/)",
   "keywords": [
@@ -20,7 +20,7 @@
     "eyes-storybook": "./bin/eyes-storybook.js"
   },
   "dependencies": {
-    "@applitools/eyes.sdk.core": "^1.0.0",
+    "@applitools/eyes.sdk.core": "^1.1.0",
     "chromedriver": "^2.34.1",
     "selenium-webdriver": "^3.6.0",
     "axios": "^0.17.1",

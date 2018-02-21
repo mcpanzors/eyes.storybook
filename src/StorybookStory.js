@@ -21,13 +21,6 @@ class StorybookStory {
     }
 
     /**
-     * @param {String} value
-     */
-    setComponentName(value) {
-        this._componentName = value;
-    }
-
-    /**
      * @return {String}
      */
     getState() {
@@ -35,24 +28,10 @@ class StorybookStory {
     }
 
     /**
-     * @param {String} value
-     */
-    setState(value) {
-        this._state = value;
-    }
-
-    /**
      * @return {RectangleSize}
      */
     getViewportSize() {
         return this._viewportSize;
-    }
-
-    /**
-     * @param {RectangleSize} value
-     */
-    setViewportSize(value) {
-        this._viewportSize = value;
     }
 
     /**

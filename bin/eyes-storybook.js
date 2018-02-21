@@ -13,6 +13,7 @@ const StorybookUtils = require('../src/StorybookUtils');
 const VERSION = require('../package.json').version;
 const DEFAULT_CONFIG_PATH = 'applitools.config.js';
 const EYES_TEST_FAILED_EXIT_CODE = 130;
+const SUPPORTED_STORYBOOK3_APPS = ['react', 'vue', 'react-native', 'angular', 'polymer'];
 
 /* --- Create CLI --- */
 let yargs = require('yargs')
@@ -36,7 +37,12 @@ let yargs = require('yargs')
         },
         debug: {
             alias: 'd',
-            description: 'Debug mode',
+            description: 'Debug mode, display all possible logs',
+            requiresArg: false,
+            boolean: true
+        },
+        verbose: {
+            description: 'Display more detailed logs',
             requiresArg: false,
             boolean: true
         }
@@ -53,19 +59,23 @@ if (yargs.version) {
 
 /* --- Load configuration from config file --- */
 let configs;
+console.log(`Used eyes.storybook of version ${VERSION}.`);
 const configsPath = path.resolve(process.cwd(), yargs.conf);
 if (fs.existsSync(configsPath)) {
-    console.log('Loading configuration from "' + configsPath + '"...');
     configs = Object.assign(defaultConfigs, require(configsPath));
+    console.log(`Configuration was loaded from "${configsPath}".`);
 } else if (yargs.conf !== DEFAULT_CONFIG_PATH) {
-    throw new Error('Config file cannot be found in "' + configsPath + '".');
+    throw new Error(`Configuration file cannot be found in "${configsPath}".`);
 } else {
     configs = defaultConfigs;
 }
-if (yargs.debug) {
+if (yargs.verbose || yargs.debug) {
     configs.showLogs = 'verbose';
-    configs.showEyesSdkLogs = 'verbose';
     configs.showStorybookOutput = true;
+
+    if (yargs.debug) {
+        configs.showEyesSdkLogs = 'verbose';
+    }
 }
 
 
@@ -84,8 +94,8 @@ if (!configs.apiKey) {
 if (!configs.maxRunningBrowsers && configs.maxRunningBrowsers !== 0) {
     throw new Error("maxRunningBrowsers should be defined.");
 }
-if (configs.storybookApp && !['react', 'vue'].includes(configs.storybookApp)) {
-    throw new Error('storybookApp should be "react" or "vue".');
+if (configs.storybookApp && !SUPPORTED_STORYBOOK3_APPS.includes(configs.storybookApp)) {
+    throw new Error(`storybookApp should be one of [${SUPPORTED_STORYBOOK3_APPS}].`);
 }
 if (configs.storybookVersion && ![2, 3].includes(configs.storybookVersion)) {
     throw new Error('storybookVersion should be 2 or 3.');
@@ -113,11 +123,11 @@ if (!fs.existsSync(packageJsonPath)) {
     throw new Error('package.json not found on path: ' + packageJsonPath);
 }
 const packageJson = require(packageJsonPath);
-const packageVersion = StorybookUtils.retrieveStorybookVersion(packageJson);
+const packageVersion = StorybookUtils.retrieveStorybookVersion(packageJson, SUPPORTED_STORYBOOK3_APPS);
 if (!configs.appName) configs.appName = packageJson.name;
 if (!configs.storybookApp) configs.storybookApp = packageVersion.app;
 if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version;
-
+console.log(`Used storybook/${configs.storybookApp} of version ${configs.storybookVersion}.`);
 
 /* --- Main execution flow --- */
 let promise = promiseFactory.resolve();
