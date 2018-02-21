@@ -57,12 +57,29 @@ class EyesRenderingRunner {
         const that = this;
         const storiesPromises = [];
         let firstStoryPromise;
-        return that._promiseFactory.makePromise(resolve => {
-            that._logger.verbose('Starting processing first story, to prepare resources and DOM...');
-            firstStoryPromise = that.testStory(firstStory, 0, 0, () => resolve());
-            storiesPromises.push(firstStoryPromise);
+
+        that._logger.log(`Collecting resources...`);
+        return readResources(that._configs.storybookOutputDir, that._promiseFactory).then(resources => {
+            that._logger.log(`Resources were collected.`);
+
+            that._logger.log(`Preparing DOM...`);
+            const iframeResource = resources.get('iframe.html');
+            resources.delete('iframe.html');
+
+            return StorybookUtils.getDocumentFromHtml(that._promiseFactory, iframeResource.getContent()).then(document => {
+                const nodes = document.querySelectorAll('*');
+                this._domNodes = EyesRenderingUtils.domNodesToCdt(Array.from(nodes).slice(0, 1));
+                this._resources = Array.from(resources.values());
+                that._logger.log(`DOM was prepared and cached.`);
+            });
         }).then(() => {
-            that._logger.verbose('Resources and DOM were prepared and sent to the server.');
+            return that._promiseFactory.makePromise(resolve => {
+                that._logger.verbose('Starting processing first story, to send resources and DOM to server...');
+                firstStoryPromise = that.testStory(firstStory, 0, 0, () => resolve());
+                storiesPromises.push(firstStoryPromise);
+            });
+        }).then(() => {
+            that._logger.verbose('Resources and DOM were sent to the server.');
             const threadsPromises = [];
             that._logger.verbose(`Starting rest ${stories.length} threads for processing stories...`);
             storiesParts.forEach((stories, i) => {
@@ -92,27 +109,10 @@ class EyesRenderingRunner {
      * @returns {Promise.<TestResults>}
      */
     testStory(story, i, j, startNextCallback) {
-        this._logger.log(`[${i}] Starting processing story ${story.getCompoundTitleWithViewportSize()}...`);
-
         const that = this;
-        let promise = this._promiseFactory.resolve();
-        if (!that._domNodes) {
-            promise = promise.then(() => {
-                that._logger.log(`[${i}] Collecting resources...`);
-                that._resources = readResourcesFromDir(that._configs.storybookOutputDir);
-                that._logger.log(`[${i}] Resources were collected and cached.`);
+        return this._promiseFactory.resolve().then(() => {
+            that._logger.log(`[${i}] Starting processing story ${story.getCompoundTitleWithViewportSize()}...`);
 
-                that._logger.log(`[${i}] Preparing DOM...`);
-                const domRootHtml = fs.readFileSync(path.join(that._configs.storybookOutputDir, 'iframe.html'));
-                return StorybookUtils.getDocumentFromHtml(that._promiseFactory, domRootHtml).then(document => {
-                    const nodes = document.querySelectorAll('*');
-                    that._domNodes = EyesRenderingUtils.domNodesToCdt(Array.from(nodes).slice(0, 1));
-                    that._logger.log(`[${i}] DOM was prepared and cached.`);
-                });
-            });
-        }
-
-        return promise.then(() => {
             const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory);
             eyes.setApiKey(that._configs.apiKey);
             eyes.setRender(true);
@@ -159,27 +159,50 @@ class EyesRenderingRunner {
     }
 }
 
-const readResourcesFromDir = (parentDir, dir, resources = []) => {
-    const files = fs.readdirSync(parentDir);
-    files.forEach(file => {
-        const longPathToFile = path.join(parentDir, file);
-        const pathToFile = dir ? (dir + '/' + file) : file;
+/**
+ * @param {string} outputDir
+ * @param {PromiseFactory} promiseFactory
+ * @return {Promise<Map<String, RGridResource>>}
+ */
+const readResources = (outputDir, promiseFactory) => {
+    const resources = new Map();
+    const promises = [];
 
-        if (fs.statSync(longPathToFile).isDirectory()) {
-            resources = readResourcesFromDir(longPathToFile, pathToFile, resources);
-        } else {
-            if (pathToFile === 'index.html' || pathToFile === 'iframe.html' || file.endsWith('.map')) {
-                return;
+    const storeResource = (fullPath, localPath, fileName) => {
+        return promiseFactory.makePromise((resolve, reject) => {
+            fs.readFile(fullPath, (err, data) => {
+                if (err) return reject(err);
+
+                const resource = new RGridResource();
+                resource.setUrl('http://localhost/' + localPath);
+                resource.setContentType(mime.lookup(fileName));
+                resource.setContent(data);
+                resources.set(localPath, resource);
+                return resolve();
+            });
+        });
+    };
+
+    const readResourcesRecursive = (fullPathToDir, localPathToDir) => {
+        fs.readdirSync(fullPathToDir).forEach(fileName => {
+            const fullPath = path.join(fullPathToDir, fileName);
+            const localPath = localPathToDir ? (localPathToDir + '/' + fileName) : fileName;
+
+            if (fs.statSync(fullPath).isDirectory()) {
+                readResourcesRecursive(fullPath, localPath);
+            } else if (!filterResources(localPath)) {
+                promises.push(storeResource(fullPath, localPath, fileName));
             }
+        });
+    };
 
-            const resource = new RGridResource();
-            resource.setUrl('http://localhost/' + pathToFile);
-            resource.setContentType(mime.lookup(file));
-            resource.setContent(fs.readFileSync(longPathToFile));
-            resources.push(resource);
-        }
-    });
-    return resources;
+    readResourcesRecursive(outputDir);
+
+    return promiseFactory.all(promises).then(() => resources);
+};
+
+const filterResources = (path) => {
+    return path === 'index.html' || path.endsWith('.map');
 };
 
 module.exports = EyesRenderingRunner;
