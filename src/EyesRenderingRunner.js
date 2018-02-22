@@ -30,7 +30,7 @@ class EyesRenderingRunner {
     testStories(stories) {
         this._logger.log('Splitting stories for multiple parts...');
 
-        const maxThreads = this._configs.maxRunningBrowsers;
+        const maxThreads = this._configs.maxConcurrency;
         const threadsCount = (maxThreads === 0 || maxThreads > stories.length) ? stories.length : maxThreads;
 
         const storiesParts = [];

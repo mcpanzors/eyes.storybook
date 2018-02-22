@@ -8,6 +8,8 @@ const EyesStorybook = require('./EyesStorybook');
 const StorybookUtils = require('./StorybookUtils');
 const EyesSeleniumUtils = require('./EyesSeleniumUtils');
 
+const DEFAULT_CONCURRENCY = 10;
+
 class EyesWebDriverRunner {
 
     constructor(logger, promiseFactory, configs) {
@@ -35,9 +37,8 @@ class EyesWebDriverRunner {
     testStories(stories) {
         this._logger.log('Splitting stories for multiple parts...');
 
-        const maxThreads = this._configs.maxRunningBrowsers;
-        const defaultThreads = this._configs.viewportSize ? this._configs.viewportSize.length : 1;
-        const threadsCount = maxThreads === 0 ? defaultThreads : (maxThreads > stories.length ? stories.length : maxThreads);
+        const maxThreads = this._configs.maxConcurrency;
+        const threadsCount = maxThreads === 0 ? (DEFAULT_CONCURRENCY > stories.length ? stories.length : DEFAULT_CONCURRENCY) : (maxThreads > stories.length ? stories.length : maxThreads);
 
         const storiesParts = [];
         const storiesMod = stories.length % threadsCount;

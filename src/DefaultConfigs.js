@@ -8,8 +8,8 @@ module.exports = {
     ],
 
     /* Number of parallel browsers or connections to rendering server  */
-    maxRunningBrowsers: 0, // should be 1 in case of non-headless browser,
-                           // default 0 - is not limited for rendering server or number of viewportSizes for browsers
+    maxConcurrency: 0, // should be 1 in case of non-headless browser,
+                       // default 0 - is not limited for rendering server or 10 for headless browsers
 
     /* Storybook configuration */
     storybookApp: null, // [react, vue, react-native, angular, polymer]
