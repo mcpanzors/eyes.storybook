@@ -2,7 +2,7 @@
 
 Applitools Eyes SDK For Storybook
 
-[![npm (scoped)](https://img.shields.io/npm/v/eyes.storybook.svg?style=for-the-badge)](https://www.npmjs.com/package/eyes.storybook)
+[![npm](https://img.shields.io/npm/v/@applitools/eyes.storybook.svg?style=for-the-badge)](https://www.npmjs.com/package/@applitools/eyes.storybook)
 
 ## Installation
 
@@ -10,7 +10,7 @@ Add your Applitools API key to your environment variables as `APPLITOOLS_API_KEY
 
 Install eyes.storybook as a local dev dependency in your tested project:
 
-    npm install --save-dev eyes.storybook 
+    npm install --save-dev @applitools/eyes.storybook
 
 Open your package.json, and add a script:
 
@@ -41,7 +41,7 @@ Common example:
             {width: 1000, height: 600}
         ],
         
-        maxRunningBrowsers: 5,
+        maxConcurrency: 5,
 
         seleniumAddress: 'http://localhost:4444/wd/hub',
         capabilities: {
@@ -60,13 +60,9 @@ If you would like to run storybook server out of the eyes-storybook execution, y
 
     if (typeof window === 'object') window.__storybook_stories__ = require('@kadira/storybook').getStorybook();
 
-**Storybook v3 - React:**
+**Storybook v3** (for Vue, Angular and others, just replace @storybook/react according to yours):
 
     if (typeof window === 'object') window.__storybook_stories__ = require('@storybook/react').getStorybook();
-
-**Storybook v3 - Vue.js:**
-
-    if (typeof window === 'object') window.__storybook_stories__ = require('@storybook/vue').getStorybook();
 
 ---
 
