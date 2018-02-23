@@ -2,14 +2,18 @@
 
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const https = require('https');
 const jsdom = require("jsdom/lib/old-api");
-const axios = require('axios');
 const {spawn, execSync} = require('child_process');
 const {RectangleSize} = require('@applitools/eyes.sdk.core');
 
 const StorybookStory = require('./StorybookStory');
 
 const IS_WINDOWS = process.platform.startsWith('win');
+const REQUEST_TIMEOUT = 5000; // ms
+const REQUEST_RETRY = 3;
+const isHttps = /https:?/;
 
 class StorybookUtils {
 
@@ -140,18 +144,25 @@ class StorybookUtils {
      * @param {Logger} logger
      * @param {PromiseFactory} promiseFactory
      * @param {Object} configs
+     * @param {int} [retry]
      * @returns {Promise.<StorybookStory[]>}
      */
-    static getStoriesFromWeb(logger, promiseFactory, configs) {
-        logger.log('Getting stories from storybook server...');
+    static getStoriesFromWeb(logger, promiseFactory, configs, retry = REQUEST_RETRY) {
+        logger.log('Getting stories from storybook server...', retry !== REQUEST_RETRY ? (` ${retry} retries left.`) : '');
 
-        return axios.get(configs.storybookAddress + 'static/preview.bundle.js', {timeout: 5000}).then(response => {
-            const previewCode = response.data;
+        return getRemoteContent(configs.storybookAddress + 'static/preview.bundle.js', REQUEST_TIMEOUT, promiseFactory).then(response => {
             logger.log('Storybook code was received from server.');
-            return prepareStories(logger, promiseFactory, configs, previewCode);
-        }).then(stories => {
-            logger.log('Stories were prepared.');
-            return stories;
+            return prepareStories(logger, promiseFactory, configs, response).then(stories => {
+                logger.log('Stories were prepared.');
+                return stories;
+            });
+        }, err => {
+            if (retry > 1) {
+                logger.log("Error on getting stories: " + err);
+                return StorybookUtils.getStoriesFromWeb(logger, promiseFactory, configs, --retry);
+            }
+
+            throw err;
         });
     }
 
@@ -321,6 +332,34 @@ const waitForStorybookStarted = (promiseFactory, storybookProcess) => {
 
         // Set up the timeout
         setTimeout(() => reject('Storybook din\'t start after 5 min waiting.'), 5 * 60 * 1000); // 5 min
+    });
+};
+
+/**
+ * @param {string} url
+ * @param {int} timeout
+ * @param {PromiseFactory} promiseFactory
+ * @return {Promise<String>}
+ */
+const getRemoteContent = (url, timeout, promiseFactory) => {
+    return promiseFactory.makePromise((resolve, reject) => {
+        const agent = isHttps.test(url) ? https : http;
+        const request = agent.get(url, res => {
+            res.setEncoding("utf8");
+            let content = "";
+            res.on("data", data => {content += data});
+            res.on("end", () => resolve(content));
+            res.on('error', (e) => reject(e));
+        });
+
+        request.on('socket', socket => {
+            socket.setTimeout(timeout, () => request.abort());
+        });
+
+        request.on('error', err => {
+            if (err.code === "ECONNRESET") return reject("Request timeout reached.");
+            return reject(err);
+        });
     });
 };
 
