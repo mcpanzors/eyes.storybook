@@ -11,7 +11,7 @@ const {RectangleSize, GeneralUtils} = require('@applitools/eyes.sdk.core');
 const StorybookStory = require('./StorybookStory');
 
 const IS_WINDOWS = process.platform.startsWith('win');
-const REQUEST_TIMEOUT = 5000; // ms
+const REQUEST_TIMEOUT = 1000; // ms
 const WAIT_BETWEEN_REQUESTS = 500; // ms
 const REQUEST_RETRY = 3;
 const isHttps = /https:?/;
@@ -163,12 +163,12 @@ class StorybookUtils {
                 return stories;
             });
         }, err => {
-            if (retry > 1) {
-                logger.log("Error on getting stories: " + err);
-                return StorybookUtils.getStoriesFromWeb(logger, promiseFactory, configs, --retry);
-            }
+            logger.log("Error on getting stories: " + err);
+            if (retry <= 1) throw err;
 
-            throw err;
+            return GeneralUtils.sleep(WAIT_BETWEEN_REQUESTS, promiseFactory).then(() => {
+                return StorybookUtils.getStoriesFromWeb(logger, promiseFactory, configs, --retry);
+            });
         });
     }
 
