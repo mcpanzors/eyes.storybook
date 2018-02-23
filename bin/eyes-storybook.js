@@ -127,7 +127,6 @@ const packageVersion = StorybookUtils.retrieveStorybookVersion(packageJson, SUPP
 if (!configs.appName) configs.appName = packageJson.name;
 if (!configs.storybookApp) configs.storybookApp = packageVersion.app;
 if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version;
-console.log(`Used storybook/${configs.storybookApp} of version ${configs.storybookVersion}.`);
 
 /* --- Main execution flow --- */
 let promise = promiseFactory.resolve();
@@ -186,10 +185,10 @@ return promise.then(/** TestResults[] */ results => {
     process.exit(exitCode);
 }).catch(err => {
     console.error(err.message || err.toString());
-    if (yargs.debug) {
-        console.error('DEBUG:', err.stack);
-    } else {
+    if (!yargs.debug) {
         console.log('Run with --debug flag to see more logs.');
+    } else if (err.stack) {
+        console.error('Stack trace:', err.stack);
     }
 
     process.exit(1);

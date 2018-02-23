@@ -179,16 +179,23 @@ class StorybookUtils {
      * @returns {Promise.<StorybookStory[]>}
      */
     static getStoriesFromStatic(logger, promiseFactory, configs) {
-        logger.log('Getting stories from storybook build...');
+        return promiseFactory.makePromise((resolve, reject) => {
+            logger.log('Getting stories from storybook build...');
+            const staticDirPath = path.resolve(process.cwd(), configs.storybookOutputDir, 'static');
+            fs.readdir(staticDirPath, (err, files) => {
+                if (err) return reject(err);
 
-        const staticDirPath = path.resolve(process.cwd(), configs.storybookOutputDir, 'static');
-        const previewFile = fs.readdirSync(staticDirPath).find(filename => {
-            return filename.startsWith("preview.") && filename.endsWith(".bundle.js");
-        });
+                const previewFile = files.find(filename => filename.startsWith("preview.") && filename.endsWith(".bundle.js"));
+                fs.readFile(path.resolve(staticDirPath, previewFile), 'utf8', (err, data) => {
+                    if (err) return reject(err);
 
-        const previewCode = fs.readFileSync(path.resolve(staticDirPath, previewFile), 'utf8');
-        logger.log('Storybook code was loaded from build.');
-        return prepareStories(logger, promiseFactory, configs, previewCode).then(stories => {
+                    logger.log('Storybook code was loaded from build.');
+                    return resolve(data);
+                });
+            });
+        }).then(previewCode => {
+            return prepareStories(logger, promiseFactory, configs, previewCode);
+        }).then(stories => {
             logger.log('Stories were prepared.');
             return stories;
         });
