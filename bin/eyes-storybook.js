@@ -91,8 +91,8 @@ if (configs.showLogs) {
 if (!configs.apiKey) {
     throw new Error('The Applitools API Key is missing. Please add it to your configuration file or set ENV key.');
 }
-if (!configs.maxRunningBrowsers && configs.maxRunningBrowsers !== 0) {
-    throw new Error("maxRunningBrowsers should be defined.");
+if (!configs.maxConcurrency && configs.maxConcurrency !== 0) {
+    throw new Error("maxConcurrency should be defined.");
 }
 if (configs.storybookApp && !SUPPORTED_STORYBOOK3_APPS.includes(configs.storybookApp)) {
     throw new Error(`storybookApp should be one of [${SUPPORTED_STORYBOOK3_APPS}].`);
