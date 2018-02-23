@@ -9,7 +9,7 @@ module.exports = {
 
     /* Number of parallel browsers or connections to rendering server  */
     maxConcurrency: 0, // should be 1 in case of non-headless browser,
-                       // default 0 - is not limited for rendering server or 10 for headless browsers
+                       // default 0, it means not limited for rendering server or 10 for headless browsers
 
     /* Storybook configuration */
     storybookApp: null, // [react, vue, react-native, angular, polymer]
@@ -19,11 +19,12 @@ module.exports = {
 
     /* Only for renderer */
     useRenderer: false, // if true, then will be used render server instead of running browsers locally
+    skipStorybookBuild: false, // if true, will skip building storybook app, make sure the app build is exists
     storybookOutputDir: 'storybook-static',
 
     /* Only for browser */
-    storybookAddress: null, // if you already run storybook server, then use 'http://localhost:9001/'
-    storybookPort: 9001,
+    storybookAddress: null, // if you already run storybook server, then use address like 'http://localhost:9001/', it will skipp starting storybook
+    storybookPort: 9001, // on which port we will to start storybook server, not used when storybookAddress specified
     seleniumAddress: null, // if you run remote selenium server, then use 'http://localhost:4444/wd/hub'
     capabilities: {
         browserName: 'chrome',

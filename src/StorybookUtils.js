@@ -6,12 +6,13 @@ const http = require('http');
 const https = require('https');
 const jsdom = require("jsdom/lib/old-api");
 const {spawn, execSync} = require('child_process');
-const {RectangleSize} = require('@applitools/eyes.sdk.core');
+const {RectangleSize, GeneralUtils} = require('@applitools/eyes.sdk.core');
 
 const StorybookStory = require('./StorybookStory');
 
 const IS_WINDOWS = process.platform.startsWith('win');
 const REQUEST_TIMEOUT = 5000; // ms
+const WAIT_BETWEEN_REQUESTS = 500; // ms
 const REQUEST_RETRY = 3;
 const isHttps = /https:?/;
 
@@ -104,6 +105,11 @@ class StorybookUtils {
      * @return {Promise<void>}
      */
     static buildStorybook(logger, promiseFactory, configs) {
+        if (configs.skipStorybookBuild) {
+            logger.log('Building storybook skipped due to skipStorybookBuild config.');
+            return promiseFactory.resolve();
+        }
+
         logger.log('Building Storybook...');
         let storybookPath = path.resolve(process.cwd(), 'node_modules/.bin/build-storybook' + (IS_WINDOWS ? '.cmd' : ''));
 
