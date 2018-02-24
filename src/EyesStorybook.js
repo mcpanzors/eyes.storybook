@@ -1,6 +1,6 @@
 'use strict';
 
-const {EyesBase, RectangleSize, EyesSimpleScreenshot, NullRegionProvider} = require('@applitools/eyes.sdk.core');
+const {EyesBase, RectangleSize, EyesSimpleScreenshot, NullRegionProvider, CheckSettings} = require('@applitools/eyes.sdk.core');
 const VERSION = require('../package.json').version;
 
 class EyesStorybook extends EyesBase {
@@ -10,10 +10,12 @@ class EyesStorybook extends EyesBase {
      *
      * @param {String} [serverUrl] The Eyes server URL.
      * @param {PromiseFactory} [promiseFactory] If not specified will be created using `Promise` object
+     * @param {string} [apiKey]
      **/
-    constructor(serverUrl, promiseFactory) {
+    constructor(serverUrl, promiseFactory, apiKey) {
         super(serverUrl || EyesBase.getDefaultServerUrl(), false, promiseFactory);
 
+        this.setApiKey(apiKey);
         this._title = undefined;
         this._screenshot = undefined;
         this._screenshotUrl = undefined;
@@ -36,7 +38,37 @@ class EyesStorybook extends EyesBase {
      * @return {Promise}
      */
     open(appName, testName, viewportSize) {
-        return super.openBase(appName, testName, viewportSize);
+        const that = this;
+        // do not open eyes session, just init Eyes SDK
+        return super.openBase(appName, testName).then(() => {
+            that._viewportSizeHandler.set(new RectangleSize(viewportSize));
+        });
+    }
+
+    //noinspection JSUnusedGlobalSymbols
+    /**
+     * Get a RenderingInfo from eyes server
+     *
+     * @return {Promise.<RenderingInfo>}
+     */
+    getRenderInfo() {
+        return this._serverConnector.renderInfo();
+    }
+
+    //noinspection JSUnusedGlobalSymbols
+    /**
+     * Create a screenshot of a page on RenderingGrid server
+     *
+     * @param {String} url The url of the page to be rendered
+     * @param {RGridDom} rGridDom The DOM of a page with resources
+     * @param {number} [renderWidth]
+     * @param {RenderingInfo} [renderingInfo]
+     * @return {Promise.<String>} The results of the render
+     */
+    renderWindow(url, rGridDom, renderWidth, renderingInfo) {
+        this._serverConnector.setRenderingAuthToken(renderingInfo.getAccessToken());
+        this._serverConnector.setRenderingServerUrl(renderingInfo.getServiceUrl());
+        return this._renderWindowTask.renderWindow(renderingInfo.getResultsUrl(), url, rGridDom, renderWidth);
     }
 
     //noinspection JSUnusedGlobalSymbols
@@ -57,7 +89,7 @@ class EyesStorybook extends EyesBase {
             const regionProvider = new NullRegionProvider(that.getPromiseFactory());
 
             that._logger.verbose(`checkImage(screenshot, "${title}")`);
-            return super.checkWindowBase(regionProvider, title, false);
+            return super.checkSingleWindowBase(regionProvider, title, false, new CheckSettings(0));
         });
     };
 
@@ -77,7 +109,7 @@ class EyesStorybook extends EyesBase {
             const regionProvider = new NullRegionProvider(that.getPromiseFactory());
 
             that._logger.verbose(`checkUrl(${imageLocation}, "${title}")`);
-            return super.checkWindowBase(regionProvider, title, false);
+            return super.checkSingleWindowBase(regionProvider, title, false, new CheckSettings(0));
         });
     };
 
@@ -90,7 +122,7 @@ class EyesStorybook extends EyesBase {
      */
     close(throwEx = true) {
         return this._globalFlow = this._globalFlow.then(() => {
-            return super.close(throwEx);
+            // nothing to close, only single window match requests
         });
     };
 

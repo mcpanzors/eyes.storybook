@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime-types');
-const {BatchInfo, RGridResource, RGridDom, Logger, ConsoleLogHandler} = require('@applitools/eyes.sdk.core');
+const {BatchInfo, RGridResource, RGridDom, Logger, ConsoleLogHandler, GeneralUtils} = require('@applitools/eyes.sdk.core');
 
 const EyesStorybook = require('./EyesStorybook');
 const StorybookUtils = require('./StorybookUtils');
@@ -21,6 +21,7 @@ class EyesRenderingRunner {
 
         this._testBatch = new BatchInfo(configs.appName);
         this._rGridDom = undefined;
+        this._renderInfo = undefined;
     }
 
     /**
@@ -28,6 +29,7 @@ class EyesRenderingRunner {
      * @returns {Promise.<TestResults[]>}
      */
     testStories(stories) {
+        const elapsedTimeStart = GeneralUtils.currentTimeMillis();
         this._logger.log('Splitting stories for multiple parts...');
 
         const maxThreads = this._configs.maxConcurrency;
@@ -48,7 +50,8 @@ class EyesRenderingRunner {
             storiesParts.push(stories.slice(startStory, endStory));
         }
 
-        this._logger.log(`Stories were slitted for ${threadsCount} parts. Stories per thread: ${storiesPerThread}${storiesMod ? ('-' + (storiesPerThread + 1)) : ''}`);
+        const perThread = storiesPerThread + (storiesMod ? ('-' + (storiesPerThread + 1)) : '');
+        this._logger.log(`Stories were slitted for ${threadsCount} parts. Stories per thread: ${perThread}, total stories: ${stories.length}.`);
 
         const firstStory = storiesParts[0][0];
         storiesParts[0].shift();
@@ -74,6 +77,13 @@ class EyesRenderingRunner {
                 that._logger.log(`DOM was prepared and cached.`);
             });
         }).then(() => {
+            that._logger.log(`Requesting RenderingInfo...`);
+            const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory, that._configs.apiKey);
+            return eyes.getRenderInfo().then(renderingInfo => {
+                that._renderInfo = renderingInfo;
+                that._logger.log(`RenderingInfo was received.`);
+            });
+        }).then(() => {
             return that._promiseFactory.makePromise(resolve => {
                 that._logger.verbose('Starting processing first story, to send resources and DOM to server...');
                 firstStoryPromise = that.testStory(firstStory, 0, 0, () => resolve());
@@ -96,7 +106,8 @@ class EyesRenderingRunner {
             });
             return that._promiseFactory.all(threadsPromises);
         }).then(() => {
-            that._logger.log(`All stories were processed.`);
+            const elapsedTime = GeneralUtils.currentTimeMillis() - elapsedTimeStart;
+            that._logger.log(`All stories were processed. Elapsed time ${GeneralUtils.elapsedString(elapsedTime)}`);
             return that._promiseFactory.all(storiesPromises);
         });
     }
@@ -114,9 +125,7 @@ class EyesRenderingRunner {
         return this._promiseFactory.resolve().then(() => {
             that._logger.log(`[${i}] Starting processing story ${story.getCompoundTitleWithViewportSize()}...`);
 
-            const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory);
-            eyes.setApiKey(that._configs.apiKey);
-            eyes.setRender(true);
+            const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory, that._configs.apiKey);
             eyes.setBatch(that._testBatch);
             eyes.addProperty("Component name", story.getComponentName());
             eyes.addProperty("State", story.getState());
@@ -126,29 +135,23 @@ class EyesRenderingRunner {
                 eyes.setLogHandler(new ConsoleLogHandler(that._configs.showEyesSdkLogs === 'verbose'));
             }
 
-            that._logger.verbose(`[${i}] Opening Eyes session...`);
-            return eyes.open(that._configs.appName, story.getCompoundTitle(), story.getViewportSize()).then(() => {
-                that._logger.verbose(`[${i}] Session was created.`);
-                that._logger.verbose(`[${i}] Sending Rendering requests...`);
-                return eyes.renderWindow(story.getStorybookUrl('http://localhost/'), that._rGridDom);
-            }).then(imageLocation => {
+            let imageUrl;
+            that._logger.verbose(`[${i}] Sending Rendering requests...`);
+            return eyes.renderWindow(story.getStorybookUrl('http://localhost/'), that._rGridDom, that._renderInfo, story.getViewportSize().getWidth()).then(imageLocation => {
+                imageUrl = imageLocation;
                 that._logger.verbose(`[${i}] Render was finished.`);
                 if (startNextCallback) {
                     startNextCallback();
                 }
 
-                that._logger.verbose(`[${i}] Sending check request...`);
-                return eyes.checkUrl(imageLocation, story.getCompoundTitle());
+                that._logger.verbose(`[${i}] Preforming screenshot validation...`);
+                return eyes.open(that._configs.appName, story.getCompoundTitle(), story.getViewportSize());
             }).then(() => {
-                that._logger.verbose(`[${i}] Screenshot was sent.`);
-
-                that._logger.verbose(`[${i}] Sending close request...`);
-                return eyes.close(false);
-            }).then(results => {
-                that._logger.verbose(`[${i}] Session was closed.`);
-
+                return eyes.checkUrl(imageUrl, story.getCompoundTitle());
+            }).then(testResults => {
+                that._logger.verbose(`[${i}] Screenshot was validated.`);
                 that._logger.log(`[${i}] Story ${story.getCompoundTitleWithViewportSize()} was processed.`);
-                return results;
+                return testResults;
             });
         });
     }
