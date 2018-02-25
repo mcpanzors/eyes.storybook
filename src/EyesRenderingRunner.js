@@ -137,7 +137,7 @@ class EyesRenderingRunner {
 
             let imageUrl;
             that._logger.verbose(`[${i}] Sending Rendering requests...`);
-            return eyes.renderWindow(story.getStorybookUrl('http://localhost/'), that._rGridDom, that._renderInfo, story.getViewportSize().getWidth()).then(imageLocation => {
+            return eyes.renderWindow(story.getStorybookUrl('http://localhost/'), that._rGridDom, story.getViewportSize().getWidth(), that._renderInfo).then(imageLocation => {
                 imageUrl = imageLocation;
                 that._logger.verbose(`[${i}] Render was finished.`);
                 if (startNextCallback) {
