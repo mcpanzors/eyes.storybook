@@ -35,6 +35,12 @@ let yargs = require('yargs')
             requiresArg: true,
             default: DEFAULT_CONFIG_PATH
         },
+        renderer: {
+            alias: 'r',
+            description: 'Use renderer service for remote render',
+            requiresArg: false,
+            boolean: true
+        },
         debug: {
             alias: 'd',
             description: 'Debug mode, display all possible logs',
@@ -88,6 +94,10 @@ if (configs.showLogs) {
 
 
 /* --- Validating configuration --- */
+if (yargs.renderer) {
+    configs.useRenderer = true;
+    logger.log("Forced renderer mode, because of --renderer argument.")
+}
 if (!configs.apiKey) {
     throw new Error('The Applitools API Key is missing. Please add it to your configuration file or set ENV key.');
 }
@@ -184,11 +194,9 @@ return promise.then(/** TestResults[] */ results => {
 
     process.exit(exitCode);
 }).catch(err => {
-    console.error(err.message || err.toString());
+    console.error(err);
     if (!yargs.debug) {
         console.log('Run with --debug flag to see more logs.');
-    } else if (err.stack) {
-        console.error('Stack trace:', err.stack);
     }
 
     process.exit(1);
