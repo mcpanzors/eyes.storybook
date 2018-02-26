@@ -2,8 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const http = require('http');
-const https = require('https');
+const axios = require('axios');
 const jsdom = require("jsdom/lib/old-api");
 const {spawn, execSync} = require('child_process');
 const {RectangleSize, GeneralUtils} = require('@applitools/eyes.sdk.core');
@@ -46,7 +45,6 @@ class StorybookUtils {
         if (configs.storybookStaticDir) {
             args.push('--static-dir');
             args.push(configs.storybookStaticDir);
-            logger.log('Use custom Storybook staticDir: ' + configs.storybookStaticDir);
         }
 
         const storybookConfigPath = path.resolve(process.cwd(), configs.storybookConfigDir, 'config.js');
@@ -156,11 +154,21 @@ class StorybookUtils {
     static getStoriesFromWeb(logger, promiseFactory, configs, retry = REQUEST_RETRY) {
         logger.log('Getting stories from storybook server...', retry !== REQUEST_RETRY ? (` ${retry} retries left.`) : '');
 
-        return getRemoteContent(configs.storybookAddress + 'static/preview.bundle.js', REQUEST_TIMEOUT, promiseFactory).then(response => {
-            logger.log('Storybook code was received from server.');
-            return prepareStories(logger, promiseFactory, configs, response).then(stories => {
-                logger.log('Stories were prepared.');
-                return stories;
+        return axios.get(configs.storybookAddress + 'static/preview.bundle.js', {timeout: REQUEST_TIMEOUT}).then(previewResponse => {
+            return axios.get(configs.storybookAddress + 'static/vendor.bundle.js', {timeout: REQUEST_TIMEOUT}).then(vendorResponse => {
+                return vendorResponse.data + '\n' + previewResponse.data;
+            }).catch(err => {
+                if (err && err.response.status !== 404) {
+                    logger.verbose('Getting vendor.bundle.js file failed.');
+                }
+
+                return previewResponse.data;
+            }).then(storybookCode => {
+                logger.log('Storybook code was received from server.');
+                return prepareStories(logger, promiseFactory, configs, storybookCode).then(stories => {
+                    logger.log('Stories were prepared.');
+                    return stories;
+                });
             });
         }, err => {
             logger.log("Error on getting stories: " + err);
@@ -186,15 +194,25 @@ class StorybookUtils {
                 if (err) return reject(err);
 
                 const previewFile = files.find(filename => filename.startsWith("preview.") && filename.endsWith(".bundle.js"));
-                fs.readFile(path.resolve(staticDirPath, previewFile), 'utf8', (err, data) => {
+                const vendorFile = files.find(filename => filename.startsWith("vendor.") && filename.endsWith(".bundle.js"));
+                fs.readFile(path.resolve(staticDirPath, previewFile), 'utf8', (err, previewCode) => {
                     if (err) return reject(err);
+                    if (!vendorFile) {
+                        return resolve(previewCode);
+                    }
 
-                    logger.log('Storybook code was loaded from build.');
-                    return resolve(data);
+                    fs.readFile(path.resolve(staticDirPath, vendorFile), 'utf8', (err, vendorCode) => {
+                        if (err) {
+                            logger.verbose('Getting vendor.bundle.js file failed.');
+                            return reject(err);
+                        }
+                        return resolve(vendorCode + '\n' + previewCode);
+                    });
                 });
             });
-        }).then(previewCode => {
-            return prepareStories(logger, promiseFactory, configs, previewCode);
+        }).then(storybookCode => {
+            logger.log('Storybook code was loaded from build.');
+            return prepareStories(logger, promiseFactory, configs, storybookCode);
         }).then(stories => {
             logger.log('Stories were prepared.');
             return stories;
@@ -211,8 +229,8 @@ class StorybookUtils {
             const jsdomConfig = {
                 html: htmlContent,
                 done: (err, window) => {
-                    if (err) return reject(err.response.body);
-                    resolve(window.document);
+                    if (err) return reject(err);
+                    return resolve(window.document);
                 }
             };
             jsdom.env(jsdomConfig);
@@ -250,10 +268,10 @@ class StorybookUtils {
 /**
  * @param {PromiseFactory} promiseFactory
  * @param {Object} configs
- * @param {string} previewCode
+ * @param {string} storybookCode
  * @returns {Promise.<any>}
  */
-const getStorybookInstance = (promiseFactory, configs, previewCode) => {
+const getStorybookInstance = (promiseFactory, configs, storybookCode) => {
     return promiseFactory.makePromise((resolve, reject) => {
         // JSDom is node-parser for javascript and therefore it doesn't support some browser's API.
         // The Applitools Storybook API itself don't require them, but they needed to run clients' applications correctly.
@@ -265,7 +283,7 @@ const getStorybookInstance = (promiseFactory, configs, previewCode) => {
 
         const jsdomConfig = {
             html: '',
-            src: mocksCode.concat(previewCode),
+            src: mocksCode.concat(storybookCode),
             done: (err, window) => {
                 if (err) return reject(err.response.body);
                 if (!window || !window.__storybook_stories__) {
@@ -345,34 +363,6 @@ const waitForStorybookStarted = (promiseFactory, storybookProcess) => {
 
         // Set up the timeout
         setTimeout(() => reject('Storybook din\'t start after 5 min waiting.'), 5 * 60 * 1000); // 5 min
-    });
-};
-
-/**
- * @param {string} url
- * @param {int} timeout
- * @param {PromiseFactory} promiseFactory
- * @return {Promise<String>}
- */
-const getRemoteContent = (url, timeout, promiseFactory) => {
-    return promiseFactory.makePromise((resolve, reject) => {
-        const agent = isHttps.test(url) ? https : http;
-        const request = agent.get(url, res => {
-            res.setEncoding("utf8");
-            let content = "";
-            res.on("data", data => {content += data});
-            res.on("end", () => resolve(content));
-            res.on('error', (e) => reject(e));
-        });
-
-        request.on('socket', socket => {
-            socket.setTimeout(timeout, () => request.abort());
-        });
-
-        request.on('error', err => {
-            if (err.code === "ECONNRESET") return reject("Request timeout reached.");
-            return reject(err);
-        });
     });
 };
 
