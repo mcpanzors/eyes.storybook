@@ -11,8 +11,8 @@ const {RectangleSize, GeneralUtils} = require('@applitools/eyes.sdk.core');
 const StorybookStory = require('./StorybookStory');
 
 const IS_WINDOWS = process.platform.startsWith('win');
-const REQUEST_TIMEOUT = 1000; // ms
-const WAIT_BETWEEN_REQUESTS = 500; // ms
+const REQUEST_TIMEOUT = 10000; // ms
+const WAIT_BETWEEN_REQUESTS = 1000; // ms
 const REQUEST_RETRY = 3;
 const isHttps = /https:?/;
 
