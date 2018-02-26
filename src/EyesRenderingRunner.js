@@ -78,7 +78,7 @@ class EyesRenderingRunner {
             });
         }).then(() => {
             that._logger.log(`Requesting RenderingInfo...`);
-            const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory, that._configs.apiKey);
+            const eyes = new EyesStorybook(that._configs, that._promiseFactory);
             return eyes.getRenderInfo().then(renderingInfo => {
                 that._renderInfo = renderingInfo;
                 that._logger.log(`RenderingInfo was received.`);
@@ -125,7 +125,7 @@ class EyesRenderingRunner {
         return this._promiseFactory.resolve().then(() => {
             that._logger.log(`[${i}] Starting processing story ${story.getCompoundTitleWithViewportSize()}...`);
 
-            const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory, that._configs.apiKey);
+            const eyes = new EyesStorybook(that._configs, that._promiseFactory);
             eyes.setBatch(that._testBatch);
             eyes.addProperty("Component name", story.getComponentName());
             eyes.addProperty("State", story.getState());

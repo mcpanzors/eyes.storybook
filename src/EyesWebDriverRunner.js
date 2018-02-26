@@ -5,7 +5,6 @@ const {Builder} = require('selenium-webdriver');
 const {BatchInfo, ConsoleLogHandler, Logger, GeneralUtils} = require('@applitools/eyes.sdk.core');
 
 const EyesStorybook = require('./EyesStorybook');
-const StorybookUtils = require('./StorybookUtils');
 const EyesSeleniumUtils = require('./EyesSeleniumUtils');
 
 const DEFAULT_CONCURRENCY = 10;
@@ -154,7 +153,7 @@ class EyesWebDriverRunner {
         }).then(screenshot => {
             that._logger.verbose(`[${i}] Screenshot was created.`);
 
-            const eyes = new EyesStorybook(that._configs.serverUrl, that._promiseFactory, that._configs.apiKey);
+            const eyes = new EyesStorybook(that._configs, that._promiseFactory);
             eyes.setBatch(that._testBatch);
             eyes.addProperty("Component name", story.getComponentName());
             eyes.addProperty("State", story.getState());

@@ -1,19 +1,21 @@
 module.exports = {
+    /* Server configuration */
     serverUrl: null, // if null, then we will use EyesBase.DEFAULT_EYES_SERVER
+    proxy: null, // should be a string like 'http://user:pass@lcoalhost:8888/', used only for remote requests to eyes services
     apiKey: process.env.APPLITOOLS_API_KEY,
-    appName: null,
+
+    /* App and test configuration */
+    appName: null, // you can specify it directly, otherwise it will be extracted from your package.json
     viewportSize: [ // can be array of objects or single object, e.g. {width: 800, height: 600}
         {width: 800, height: 600},
         {width: 1200, height: 720}
     ],
-
-    /* Number of parallel browsers or connections to rendering server  */
-    maxConcurrency: 0, // should be 1 in case of non-headless browser,
-                       // default 0, it means not limited for rendering server or 10 for headless browsers
+    maxConcurrency: 0, // number of parallel browsers or connections to rendering server,
+                       // default 0, it means not limited for rendering server or 10 for headless browsers (should be 1 in case of non-headless browser)
 
     /* Storybook configuration */
-    storybookApp: null, // [react, vue, react-native, angular, polymer]
-    storybookVersion: null, // [2, 3]
+    storybookApp: null, // usually should be extracted from your package.json automatically, possible values [react, vue, react-native, angular, polymer]
+    storybookVersion: null, // usually should be extracted from your package.json automatically, possible values [2, 3]
     storybookConfigDir: '.storybook',
     storybookStaticDir: null,
 

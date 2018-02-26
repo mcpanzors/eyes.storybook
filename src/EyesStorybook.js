@@ -8,20 +8,24 @@ class EyesStorybook extends EyesBase {
     /**
      * Initializes an Eyes instance.
      *
-     * @param {String} [serverUrl] The Eyes server URL.
+     * @param {Object} [configs] The eyes.storybook configuration
      * @param {PromiseFactory} [promiseFactory] If not specified will be created using `Promise` object
-     * @param {string} [apiKey]
      **/
-    constructor(serverUrl, promiseFactory, apiKey) {
-        super(serverUrl || EyesBase.getDefaultServerUrl(), false, promiseFactory);
+    constructor(configs, promiseFactory) {
+        super(undefined, undefined, promiseFactory);
 
-        this.setApiKey(apiKey);
+        this.setApiKey(configs.apiKey);
+        if (configs.serverUrl) {
+            this.setServerUrl(configs.serverUrl);
+        }
+        if (configs.proxy) {
+            this.setProxy(configs.proxy);
+        }
+
         this._title = undefined;
         this._screenshot = undefined;
         this._screenshotUrl = undefined;
         this._inferred = "";
-
-        this._globalFlow = Promise.resolve();
     }
 
     /** @override */
@@ -80,17 +84,13 @@ class EyesStorybook extends EyesBase {
      * @return {Promise}
      */
     checkImage(screenshot, title) {
-        const that = this;
-        return this._globalFlow = this._globalFlow.then(() => {
-            that._title = title || '';
-            that._screenshot = new EyesSimpleScreenshot(screenshot);
-            that._screenshotUrl = null;
+        this._title = title || '';
+        this._screenshot = new EyesSimpleScreenshot(screenshot);
+        this._screenshotUrl = null;
 
-            const regionProvider = new NullRegionProvider(that.getPromiseFactory());
-
-            that._logger.verbose(`checkImage(screenshot, "${title}")`);
-            return super.checkSingleWindowBase(regionProvider, title, false, new CheckSettings(0));
-        });
+        const regionProvider = new NullRegionProvider(this.getPromiseFactory());
+        this._logger.verbose(`checkImage(screenshot, "${title}")`);
+        return super.checkSingleWindowBase(regionProvider, title, false, new CheckSettings(0));
     };
 
     //noinspection JSUnusedGlobalSymbols
@@ -100,17 +100,13 @@ class EyesStorybook extends EyesBase {
      * @return {Promise}
      */
     checkUrl(imageLocation, title) {
-        const that = this;
-        return this._globalFlow = this._globalFlow.then(() => {
-            that._title = title || '';
-            that._screenshot = null;
-            that._screenshotUrl = imageLocation;
+        this._title = title || '';
+        this._screenshot = null;
+        this._screenshotUrl = imageLocation;
 
-            const regionProvider = new NullRegionProvider(that.getPromiseFactory());
-
-            that._logger.verbose(`checkUrl(${imageLocation}, "${title}")`);
-            return super.checkSingleWindowBase(regionProvider, title, false, new CheckSettings(0));
-        });
+        const regionProvider = new NullRegionProvider(this.getPromiseFactory());
+        this._logger.verbose(`checkUrl(${imageLocation}, "${title}")`);
+        return super.checkSingleWindowBase(regionProvider, title, false, new CheckSettings(0));
     };
 
     //noinspection JSUnusedGlobalSymbols
@@ -118,12 +114,11 @@ class EyesStorybook extends EyesBase {
      * Ends the currently running test.
      *
      * @param {Boolean} throwEx If true, then the returned promise will 'reject' for failed/aborted tests.
-     * @return {Promise.<TestResults>} A promise which resolves/rejects (depending on the value of 'throwEx') to the test results.
+     * @return {Promise} A promise which resolves/rejects (depending on the value of 'throwEx') to the test results.
      */
     close(throwEx = true) {
-        return this._globalFlow = this._globalFlow.then(() => {
-            // nothing to close, only single window match requests
-        });
+        // nothing to close, only single window match requests
+        return this.getPromiseFactory().resolve();
     };
 
     //noinspection JSUnusedGlobalSymbols
