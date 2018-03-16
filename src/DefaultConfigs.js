@@ -27,6 +27,7 @@ module.exports = {
     /* Only for browser */
     storybookAddress: null, // if you already run storybook server, then use address like 'http://localhost:9001/', it will skipp starting storybook
     storybookPort: 9001, // on which port we will to start storybook server, not used when storybookAddress specified
+    storybookHost: 'localhost', // on which host we will to start storybook server, not used when storybookAddress specified
     seleniumAddress: null, // if you run remote selenium server, then use 'http://localhost:4444/wd/hub'
     capabilities: {
         browserName: 'chrome',

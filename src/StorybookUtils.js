@@ -34,16 +34,10 @@ class StorybookUtils {
         let storybookPath = path.resolve(process.cwd(), 'node_modules/.bin/start-storybook' + (IS_WINDOWS ? '.cmd' : ''));
 
         // start Storybook dev server
-        const storybookHost = 'localhost';
-        let storybookPort = 9001;
-        if (configs.storybookPort) {
-            storybookPort = configs.storybookPort;
-        }
-
-        const args = ['--port', storybookPort, '--config-dir', configs.storybookConfigDir];
+        const args = ['-p', configs.storybookPort, '-h', configs.storybookHost, '-c', configs.storybookConfigDir];
 
         if (configs.storybookStaticDir) {
-            args.push('--static-dir');
+            args.push('-s');
             args.push(configs.storybookStaticDir);
         }
 
@@ -61,7 +55,7 @@ class StorybookUtils {
             fs.writeFileSync(storybookConfigPath, template, {encoding: 'utf8'});
         }
 
-        logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
+        logger.log(storybookPath.toString() + ' ' + args.join(' '));
         const storybookProcess = spawn(storybookPath, args, {detached: !IS_WINDOWS});
 
         storybookProcess.stderr.on('data', data => console.error(bufferToString(data)));
@@ -92,7 +86,7 @@ class StorybookUtils {
 
         return waitForStorybookStarted(promiseFactory, storybookProcess).then(() => {
             logger.log('Storybook was started.');
-            return `http://${storybookHost}:${storybookPort}/`;
+            return `http://${configs.storybookHost}:${configs.storybookPort}/`;
         });
     };
 
@@ -111,12 +105,11 @@ class StorybookUtils {
         logger.log('Building Storybook...');
         let storybookPath = path.resolve(process.cwd(), 'node_modules/.bin/build-storybook' + (IS_WINDOWS ? '.cmd' : ''));
 
-        const args = ['--config-dir', configs.storybookConfigDir, '--output-dir', configs.storybookOutputDir];
+        const args = ['-c', configs.storybookConfigDir, '-o', configs.storybookOutputDir];
 
         if (configs.storybookStaticDir) {
-            args.push('--static-dir');
+            args.push('-s');
             args.push(configs.storybookStaticDir);
-            logger.log('Use custom Storybook staticDir: ' + configs.storybookStaticDir);
         }
 
         const storybookConfigPath = path.resolve(process.cwd(), configs.storybookConfigDir, 'config.js');
@@ -133,7 +126,7 @@ class StorybookUtils {
             fs.writeFileSync(storybookConfigPath, template, {encoding: 'utf8'});
         }
 
-        logger.log(storybookPath.toString() + ' ' + args.join(' '), '\n');
+        logger.log(storybookPath.toString() + ' ' + args.join(' '));
         execSync(storybookPath, args);
 
         if (isConfigOverridden) {
