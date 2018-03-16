@@ -72,6 +72,7 @@ if (fs.existsSync(configsPath)) {
 } else if (yargs.conf !== DEFAULT_CONFIG_PATH) {
     throw new Error(`Configuration file cannot be found in "${configsPath}".`);
 } else {
+    console.log(`No configuration file found. Use default configs.`);
     configs = defaultConfigs;
 }
 if (yargs.verbose || yargs.debug) {
