@@ -17,7 +17,7 @@ const SUPPORTED_STORYBOOK3_APPS = ['react', 'vue', 'react-native', 'angular', 'p
 
 /* --- Create CLI --- */
 let yargs = require('yargs')
-    .usage('Usage: $0 --conf applitools.config.js')
+    .usage('Usage: $0 [options]')
     .epilogue('Check our documentation here: https://applitools.com/resources/tutorial')
     .showHelpOnFail(false, 'Specify --help for available options')
     .help()
@@ -25,33 +25,32 @@ let yargs = require('yargs')
     .options({
         version: {
             alias: 'v',
-            description: 'Show version number',
+            description: 'Show the version number',
             requiresArg: false,
             boolean: true
         },
         conf: {
             alias: 'c',
-            description: 'Path to Configuration File',
+            description: 'Path to configuration file',
             requiresArg: true,
             default: DEFAULT_CONFIG_PATH
         },
         renderer: {
             alias: 'r',
-            description: 'Use renderer service for remote render',
-            requiresArg: false,
-            boolean: true
-        },
-        debug: {
-            alias: 'd',
-            description: 'Debug mode, display all possible logs',
+            description: 'Use renderer mode',
             requiresArg: false,
             boolean: true
         },
         verbose: {
-            description: 'Display more detailed logs',
+            description: 'Display more logs',
             requiresArg: false,
             boolean: true
-        }
+        },
+        debug: {
+            description: 'Display all possible logs and debug information',
+            requiresArg: false,
+            boolean: true
+        },
     })
     .argv;
 if (yargs.help) {
