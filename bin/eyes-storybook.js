@@ -22,15 +22,10 @@ const yargs = require('yargs')
   .usage('Usage: $0 [options]')
   .epilogue('Check our documentation here: https://applitools.com/resources/tutorial')
   .showHelpOnFail(false, 'Specify --help for available options')
-  .help()
   .alias('help', 'h')
+  .version('version', 'Show the version number', `Version ${VERSION}`)
+  .alias('version', 'v')
   .options({
-    version: {
-      alias: 'v',
-      description: 'Show the version number',
-      requiresArg: false,
-      boolean: true,
-    },
     conf: {
       alias: 'c',
       description: 'Path to configuration file',
@@ -44,27 +39,19 @@ const yargs = require('yargs')
       boolean: true,
     },
     verbose: {
+      alias: 'dd',
       description: 'Display more logs',
       requiresArg: false,
       boolean: true,
     },
     debug: {
+      alias: 'ddd',
       description: 'Display all possible logs and debug information',
       requiresArg: false,
       boolean: true,
     },
   })
   .argv;
-
-if (yargs.help) {
-  yargs.showHelp();
-  process.exit(1);
-}
-
-if (yargs.version) {
-  process.stdout.write(`Version ${VERSION}\n`);
-  process.exit(1);
-}
 
 
 /* --- Load configuration from config file --- */

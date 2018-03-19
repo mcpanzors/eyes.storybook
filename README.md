@@ -1,6 +1,6 @@
 ## Eyes.Storybook
 
-Applitools Eyes SDK For Storybook
+Applitools Eyes SDK for Storybook
 
 [![npm](https://img.shields.io/npm/v/@applitools/eyes.storybook.svg?style=for-the-badge)](https://www.npmjs.com/package/@applitools/eyes.storybook)
 
@@ -159,12 +159,12 @@ Below you can see output of the `--help` option.
 Usage: eyes-storybook [options]
 
 Options:
-  --help, -h      Show help                                            [boolean]
-  --version, -v   Show the version number                              [boolean]
-  --conf, -c      Path to configuration file   [default: "applitools.config.js"]
-  --renderer, -r  Use renderer mode                                    [boolean]
-  --verbose       Display more logs                                    [boolean]
-  --debug         Display all possible logs and debug information      [boolean]
+  --help, -h       Show help                                           [boolean]
+  --version, -v    Show the version number                             [boolean]
+  --conf, -c       Path to configuration file  [default: "applitools.config.js"]
+  --renderer, -r   Use renderer mode                                   [boolean]
+  --verbose, --dd  Display more logs                                   [boolean]
+  --debug, --ddd   Display all possible logs and debug information     [boolean]
 ```
 
 ### Run storybook server separately

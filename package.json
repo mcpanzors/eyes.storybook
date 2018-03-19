@@ -38,13 +38,13 @@
     "eyes-storybook": "./bin/eyes-storybook.js"
   },
   "dependencies": {
-    "@applitools/eyes.sdk.core": "~1.4.0",
-    "chromedriver": "^2.35.0",
+    "@applitools/eyes.sdk.core": "~1.4.2",
+    "chromedriver": "^2.36.0",
     "selenium-webdriver": "^3.6.0",
     "axios": "^0.18.0",
-    "yargs": "^8.0.2",
+    "yargs": "^11.1.0",
     "jsdom": "^11.6.2",
-    "colors": "^1.1.2",
+    "colors": "^1.2.1",
     "mime-types": "^2.1.18"
   },
   "license": "SEE LICENSE IN LICENSE",
