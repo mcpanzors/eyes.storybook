@@ -1,3 +1,4 @@
+/* eslint-disable */
 /*
 * EventSource polyfill version 0.9.7
 * https://github.com/amvtek/EventSource/blob/master/dist/eventsource.min.js

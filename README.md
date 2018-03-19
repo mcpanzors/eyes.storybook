@@ -37,11 +37,11 @@ module.exports = {
     /* Server configuration */
 
     // `serverUrl` is the Eyes server URL that will be used during matching screenshots
-    serverUrl: null, // default address stored in eyes.sdk.core
+    serverUrl: undefined, // default address stored in eyes.sdk.core
 
     // `proxy` defines the proxy server that will be used for requests to Applitools services
     // Should be a string in following format 'http://username:password@hostname:port/'
-    proxy: null, // default is not set
+    proxy: undefined, // default is not set
 
     // `apiKey` is the Applitools API Key which can be found in the Admin Panel on website
     apiKey: process.env.APPLITOOLS_API_KEY,  // as default used value from environment variable
@@ -50,13 +50,13 @@ module.exports = {
     /* App and test configuration */
 
     // `appName` is your application name that will be shown in test results
-    appName: null, // as default used your package name from package.json
+    appName: undefined, // as default used your package name from package.json
 
     // `viewportSize` is the required browser's viewport size or a list of sizes. It can be
     // an array of objects or a single object, e.g. {width: 800, height: 600}
     viewportSize: [
         {width: 750, height: 600}, // by default used the viewport sizes
-        {width: 1366, height: 768}
+        {width: 1366, height: 768},
     ],
 
     // `maxConcurrency` is a number of parallel browsers or connections to renderer server
@@ -68,11 +68,11 @@ module.exports = {
 
     // `storybookApp` is used to modify config according to your app. Usually, we don't need
     // the value, but you can force it by use one of values [react, vue, react-native, angular, polymer]
-    storybookApp: null, // default is extracted from dependencies of your package.json 
+    storybookApp: undefined, // default is extracted from dependencies of your package.json 
 
     // `storybookVersion` is related to `storybookApp` and handled in the similar way, defines
     // which version of Storybook are you using, possible values [2, 3]
-    storybookVersion: null, // default is extracted from dependencies of your package.json
+    storybookVersion: undefined, // default is extracted from dependencies of your package.json
 
     // `storybookConfigDir` defines directory where to load Storybook configurations from.
     // The value will be passed to Storybook via `--config-dir` argument
@@ -104,7 +104,7 @@ module.exports = {
     // `storybookAddress` defines an address to an external Storybook server. Define this value
     // only in case if you don't want that starting Storybook was part of our process.
     // The value should be like 'http://localhost:9001/'
-    storybookAddress: null, // by default we will start Storybook server in the process
+    storybookAddress: undefined, // by default we will start Storybook server in the process
 
     // `storybookPort` defines port on which we will start Storybook server. The value
     // is not related to `storybookAddress` and will be ignored if you specify both values
@@ -116,15 +116,15 @@ module.exports = {
 
     // `seleniumAddress` defines address to selenium server. You can use the next url as 
     // an example: 'http://localhost:4444/wd/hub'
-    seleniumAddress: null, // by default we start build-in selenium server
+    seleniumAddress: undefined, // by default we start build-in selenium server
 
     // `capabilities` defines capabilities that will be passed to WebDriver. You can add
     // options or change browser (make sure that you have required WebDriver in your PATH)
     capabilities: { // by default we use chrome in headless mode
         browserName: 'chrome',
         chromeOptions: { // you can add other options there, like '--force-device-scale-factor=2'
-            'args': ['--headless', '--disable-gpu']
-        }
+            args: ['--headless', '--disable-gpu'],
+        },
     },
 
 
