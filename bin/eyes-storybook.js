@@ -178,7 +178,7 @@ return promise
     if (results.length > 0) {
       console.log('\n[EYES: TEST RESULTS]:');
       results.forEach(result => {
-        const storyTitle = `${result.getName()} [${result.getHostDisplaySize().width}x${result.getHostDisplaySize().height}] - `;
+        const storyTitle = `${result.getName()} [${result.getHostDisplaySize().toString()}] - `;
 
         if (result.getIsNew()) {
           console.log(storyTitle, colors.green('New'));
@@ -193,7 +193,7 @@ return promise
           }
         }
       });
-      console.log('See details at', results[0].getAppUrls().batch);
+      console.log('See details at', results[0].getAppUrls().getBatch());
     } else {
       console.log('Test is finished but no results returned.');
     }
