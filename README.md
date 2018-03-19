@@ -28,7 +28,7 @@ $ npm run eyes-storybook
 
 To change browser, viewport sizes, use the renderer, etc., you can use a configuration file. 
 
-Create configuration file called `applitools.config.js` in your project directory (the name can be changed using argument `--conf`, e.g. `npm run eyes-storybook -- --conf myconfig.js`, or update your package.json).
+Create configuration file called `applitools.config.js` in your project directory (the name can be changed using `--conf` argument, e.g. `npm run eyes-storybook -- --conf myconfig.js`, or add it to your package.json).
 
 All available options are listed below:
 
@@ -182,7 +182,7 @@ If you would like to run storybook server out of the eyes-storybook execution, y
 ---
 
 
-Please check the applitools website for more instructions:
+This guide is also available in the Applitools website:
 
-- https://applitools.com/resources/tutorial
+- https://applitools.com/resources/tutorial/other/react_storybook
 
