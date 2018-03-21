@@ -38,7 +38,7 @@
     "eyes-storybook": "./bin/eyes-storybook.js"
   },
   "dependencies": {
-    "@applitools/eyes.sdk.core": "~1.4.2",
+    "@applitools/eyes.sdk.core": "~1.5.0",
     "chromedriver": "^2.36.0",
     "selenium-webdriver": "^3.6.0",
     "axios": "^0.18.0",
