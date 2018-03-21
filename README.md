@@ -92,7 +92,7 @@ module.exports = {
     useVisualGrid: true, // default mode is VisualGrid mode, change this to `false` to use Browser mode
 
     // `skipStorybookBuild` defines whether or not will be run `build-storybook` command.
-    skipStorybookBuild: false, // make sure it is set to `false` if you made changes in your app
+    skipStorybookBuild: true, // make sure it is set to `false` if you made changes in your app
 
     // `storybookOutputDir` defines directory where to store built files.
     // The value will be passed to Storybook via `--output-dir` argument

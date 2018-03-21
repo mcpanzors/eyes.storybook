@@ -23,7 +23,7 @@ module.exports = {
 
   // VisualGrid mode, default mode
   useVisualGrid: true,
-  skipStorybookBuild: false,
+  skipStorybookBuild: true,
   storybookOutputDir: process.env.SBCONFIG_OUTPUT_DIR || './storybook-static',
 
   // Browser mode
