@@ -32,9 +32,9 @@ const yargs = require('yargs')
       requiresArg: true,
       default: DEFAULT_CONFIG_PATH,
     },
-    renderer: {
-      alias: 'r',
-      description: 'Use renderer mode',
+    browser: {
+      alias: 'b',
+      description: 'Force to use Browser mode',
       requiresArg: false,
       boolean: true,
     },
@@ -88,9 +88,9 @@ if (configs.showLogs) {
 
 
 /* --- Validating configuration --- */
-if (yargs.renderer) {
-  configs.useRenderer = true;
-  logger.log('Forced renderer mode, because of --renderer argument.');
+if (yargs.browser) {
+  configs.useVisualGrid = false;
+  logger.log('Forced Browser mode, by using --browser argument.');
 }
 if (!configs.apiKey) {
   throw new Error('The Applitools API Key is missing. Please add it to your configuration file or set ENV key.');
@@ -134,7 +134,7 @@ if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version
 
 /* --- Main execution flow --- */
 let promise = promiseFactory.resolve();
-if (configs.useRenderer) {
+if (configs.useVisualGrid) {
   /* --- Building Storybook and make screenshots remote using RenderingGrid --- */
   promise = promise
     .then(() => StorybookUtils.buildStorybook(logger, promiseFactory, configs))

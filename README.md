@@ -26,7 +26,7 @@ $ npm run eyes-storybook
 
 ### Advanced configuration
 
-To change browser, viewport sizes, use the renderer, etc., you can use a configuration file. 
+To change viewport sizes, application name, test name, etc., you can use a configuration file. 
 
 Create configuration file called `applitools.config.js` in your project directory (the name can be changed using `--conf` argument, e.g. `npm run eyes-storybook -- --conf myconfig.js`, or add it to your package.json).
 
@@ -59,8 +59,8 @@ module.exports = {
         {width: 1366, height: 768},
     ],
 
-    // `maxConcurrency` is a number of parallel browsers or connections to renderer server
-    maxConcurrency: 0, // default is 0, which means not limited connections to renderer server
+    // `maxConcurrency` is a number of parallel browsers or connections to VisualGrid service
+    maxConcurrency: 0, // default is 0, which means not limited connections to VisualGrid service
                        // or 10 for headless browsers (should be set 1 for non-headless browser)
 
 
@@ -83,13 +83,13 @@ module.exports = {
     storybookStaticDir: process.env.SBCONFIG_STATIC_DIR, // Storybook default
 
 
-    /* Only for Renderer mode */
+    /* Only for VisualGrid mode */
 
-    // `useRenderer` defines a mode in which to work. Renderer mode creates a Storybook build
-    // and send it to a service which creates a screenshots of each story (in a cloud).
+    // `useVisualGrid` defines a mode in which to work. VisualGrid mode creates a Storybook build
+    // and send it to a VisualGrid service which creates a screenshots of each story (in a cloud).
     // Browser mode starts a browsers locally and makes screenshots locally, after that
     // send only images for validation
-    useRenderer: false, // default mode is Browser mode, but Renderer mode is faster
+    useVisualGrid: true, // default mode is VisualGrid mode, change this to `false` to use Browser mode
 
     // `skipStorybookBuild` defines whether or not will be run `build-storybook` command.
     skipStorybookBuild: false, // make sure it is set to `false` if you made changes in your app
@@ -162,7 +162,7 @@ Options:
   --help, -h       Show help                                           [boolean]
   --version, -v    Show the version number                             [boolean]
   --conf, -c       Path to configuration file  [default: "applitools.config.js"]
-  --renderer, -r   Use renderer mode                                   [boolean]
+  --browser, -b    Force to use Browser mode                           [boolean]
   --verbose, --dd  Display more logs                                   [boolean]
   --debug, --ddd   Display all possible logs and debug information     [boolean]
 ```

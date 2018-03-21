@@ -21,8 +21,8 @@ module.exports = {
   storybookConfigDir: process.env.SBCONFIG_CONFIG_DIR || './.storybook',
   storybookStaticDir: process.env.SBCONFIG_STATIC_DIR,
 
-  // Renderer mode
-  useRenderer: false,
+  // VisualGrid mode, default mode
+  useVisualGrid: true,
   skipStorybookBuild: false,
   storybookOutputDir: process.env.SBCONFIG_OUTPUT_DIR || './storybook-static',
 
