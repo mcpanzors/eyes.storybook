@@ -34,6 +34,13 @@
     "bin": "./bin",
     "lib": "./lib"
   },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "lib/",
+    "bin/"
+  ],
   "bin": {
     "eyes-storybook": "./bin/eyes-storybook.js"
   },
