@@ -28,7 +28,7 @@ $ npm run eyes-storybook
 
 To change viewport sizes, application name, test name, etc., you can use a configuration file. 
 
-Create configuration file called `applitools.config.js` in your project directory (the name can be changed using `--conf` argument, e.g. `npm run eyes-storybook -- --conf myconfig.js`, or add it to your package.json).
+Create configuration file called `applitools.config.js` in your project directory (the name can be changed using `--conf` CLI option, e.g. `npm run eyes-storybook -- --conf myconfig.js`, or add it to your package.json).
 
 All available options are listed below:
 
@@ -75,11 +75,11 @@ module.exports = {
     storybookVersion: undefined, // default is extracted from dependencies of your package.json
 
     // `storybookConfigDir` defines directory where to load Storybook configurations from.
-    // The value will be passed to Storybook via `--config-dir` argument
+    // The value will be passed to Storybook via `--config-dir` option
     storybookConfigDir: process.env.SBCONFIG_CONFIG_DIR || './.storybook', // Storybook default
 
     // `storybookStaticDir` defines directory where to load static files from, comma-separated list.
-    // The value will be passed to Storybook via `--static-dir` argument
+    // The value will be passed to Storybook via `--static-dir` option
     storybookStaticDir: process.env.SBCONFIG_STATIC_DIR, // Storybook default
 
 
@@ -95,7 +95,7 @@ module.exports = {
     skipStorybookBuild: true, // make sure it is set to `false` if you made changes in your app
 
     // `storybookOutputDir` defines directory where to store built files.
-    // The value will be passed to Storybook via `--output-dir` argument
+    // The value will be passed to Storybook via `--output-dir` option
     storybookOutputDir: process.env.SBCONFIG_OUTPUT_DIR || './storybook-static', // Storybook default
 
 
@@ -132,14 +132,14 @@ module.exports = {
 
     // `showLogs` defines whether or not you want to see logs. There are three possible values:
     // false - means no logs, only test results
-    // true - some logs, about what happening in the current moment
-    // 'verbose' - all available logs, report about each operation
-    showLogs: true, // default is enabled, which is suitable for most cases
+    // true - some logs, about which story processing at the moment
+    // 'verbose' - all available logs, report about each operation in the SDK
+    showLogs: false, // default is disabled
 
     // `showEyesSdkLogs` defines whether or not you want to see logs from eyes.sdk.core.
     // Can be useful if you want to see information about connections to the services.
     // Same as with `showLogs`, there possible three values [false, true, 'verbose']
-    showEyesSdkLogs: false, // default is disabled, usually the logs is not interesting
+    showEyesSdkLogs: false, // default is disabled
 
     // `showStorybookOutput` defines whether or not you want to see Storybook output.
     // If Storybook server can't be started, or started with errors, set this option to true
@@ -162,8 +162,10 @@ Options:
   --help, -h       Show help                                           [boolean]
   --version, -v    Show the version number                             [boolean]
   --conf, -c       Path to configuration file  [default: "applitools.config.js"]
-  --browser, -b    Force to use Browser mode                           [boolean]
-  --verbose, --dd  Display more logs                                   [boolean]
+  --local, -l      Force to use Browser mode                           [boolean]
+  --build, -b      Enable building Storybook app before testing        [boolean]
+  --info, -d       Display info about current running story            [boolean]
+  --verbose, --dd  Display data about current running method           [boolean]
   --debug, --ddd   Display all possible logs and debug information     [boolean]
 ```
 

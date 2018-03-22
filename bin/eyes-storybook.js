@@ -40,13 +40,19 @@ const yargs = require('yargs')
     },
     build: {
       alias: 'b',
-      description: 'Enable building Storybook app, before testing',
+      description: 'Enable building Storybook app before testing',
+      requiresArg: false,
+      boolean: true,
+    },
+    info: {
+      alias: 'd',
+      description: 'Display info about current running story',
       requiresArg: false,
       boolean: true,
     },
     verbose: {
       alias: 'dd',
-      description: 'Display more logs',
+      description: 'Display data about current running method',
       requiresArg: false,
       boolean: true,
     },
@@ -75,13 +81,18 @@ if (fs.existsSync(configsPath)) {
   configs = defaultConfig;
 }
 
-if (yargs.verbose || yargs.debug) {
-  configs.showLogs = 'verbose';
-  configs.showStorybookOutput = true;
 
-  if (yargs.debug) {
-    configs.showEyesSdkLogs = 'verbose';
-  }
+// Set log level according to specified CLI options
+if (yargs.debug) {
+  configs.showLogs = 'verbose';
+  configs.showEyesSdkLogs = 'verbose';
+  configs.showStorybookOutput = true;
+} else if (yargs.verbose) {
+  configs.showLogs = 'verbose';
+  configs.showEyesSdkLogs = true;
+  configs.showStorybookOutput = true;
+} else if (yargs.info) {
+  configs.showLogs = true;
 }
 
 
@@ -96,11 +107,11 @@ if (configs.showLogs) {
 /* --- Validating configuration --- */
 if (yargs.browser) {
   configs.useVisualGrid = false;
-  logger.log('Forced Browser mode, due to --browser argument.');
+  logger.verbose('Forced Browser mode, due to --browser option.');
 }
 if (yargs.build) {
   configs.skipStorybookBuild = false;
-  logger.log('Build Storybook enabled, due to --build argument.');
+  logger.verbose('Build Storybook enabled, due to --build option.');
 }
 if (!configs.apiKey) {
   throw new Error('The Applitools API Key is missing. Please add it to your configuration file or set ENV key.');

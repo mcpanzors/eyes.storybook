@@ -39,7 +39,7 @@ module.exports = {
   },
 
   // Logs
-  showLogs: true,
+  showLogs: false,
   showEyesSdkLogs: false,
   showStorybookOutput: false,
 };
