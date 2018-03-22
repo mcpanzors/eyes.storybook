@@ -32,9 +32,15 @@ const yargs = require('yargs')
       requiresArg: true,
       default: DEFAULT_CONFIG_PATH,
     },
-    browser: {
-      alias: 'b',
+    local: {
+      alias: 'l',
       description: 'Force to use Browser mode',
+      requiresArg: false,
+      boolean: true,
+    },
+    build: {
+      alias: 'b',
+      description: 'Enable building Storybook app, before testing',
       requiresArg: false,
       boolean: true,
     },
@@ -65,7 +71,7 @@ if (fs.existsSync(configsPath)) {
 } else if (yargs.conf !== DEFAULT_CONFIG_PATH) {
   throw new Error(`Configuration file cannot be found in "${configsPath}".`);
 } else {
-  console.log('No configuration file found. Use default configs.');
+  console.log('No configuration file found. Use default.');
   configs = defaultConfig;
 }
 
@@ -90,7 +96,11 @@ if (configs.showLogs) {
 /* --- Validating configuration --- */
 if (yargs.browser) {
   configs.useVisualGrid = false;
-  logger.log('Forced Browser mode, by using --browser argument.');
+  logger.log('Forced Browser mode, due to --browser argument.');
+}
+if (yargs.build) {
+  configs.skipStorybookBuild = false;
+  logger.log('Build Storybook enabled, due to --build argument.');
 }
 if (!configs.apiKey) {
   throw new Error('The Applitools API Key is missing. Please add it to your configuration file or set ENV key.');
