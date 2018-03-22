@@ -9,8 +9,8 @@ const colors = require('colors/safe');
 
 const { Logger, ConsoleLogHandler, PromiseFactory } = require('@applitools/eyes.sdk.core');
 
-const defaultConfig = require('../src/DefaultConfig');
-const StorybookUtils = require('../src/StorybookUtils');
+const defaultConfig = require('../lib/DefaultConfig');
+const StorybookUtils = require('../lib/StorybookUtils');
 const VERSION = require('../package.json').version;
 
 const DEFAULT_CONFIG_PATH = 'applitools.config.js';
@@ -161,7 +161,7 @@ if (configs.useVisualGrid) {
     .then(() => StorybookUtils.buildStorybook(logger, promiseFactory, configs))
     .then(() => StorybookUtils.getStoriesFromStatic(logger, promiseFactory, configs))
     .then(stories => {
-      const EyesRenderingRunner = require('../src/EyesRenderingRunner');
+      const EyesRenderingRunner = require('../lib/EyesRenderingRunner');
       const runner = new EyesRenderingRunner(logger, promiseFactory, configs);
       return runner.testStories(stories);
     });
@@ -172,7 +172,7 @@ if (configs.useVisualGrid) {
     .then(storybookAddress => { configs.storybookAddress = storybookAddress; })
     .then(() => StorybookUtils.getStoriesFromWeb(logger, promiseFactory, configs))
     .then(stories => {
-      const EyesWebDriverRunner = require('../src/EyesWebDriverRunner');
+      const EyesWebDriverRunner = require('../lib/EyesWebDriverRunner');
       const runner = new EyesWebDriverRunner(logger, promiseFactory, configs);
       return runner.testStories(stories);
     });

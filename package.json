@@ -32,7 +32,7 @@
   },
   "directories": {
     "bin": "./bin",
-    "lib": "./src"
+    "lib": "./lib"
   },
   "bin": {
     "eyes-storybook": "./bin/eyes-storybook.js"
