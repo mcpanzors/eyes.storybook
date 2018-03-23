@@ -46,13 +46,14 @@
   },
   "dependencies": {
     "@applitools/eyes.sdk.core": "~1.5.0",
-    "chromedriver": "^2.36.0",
-    "selenium-webdriver": "^3.6.0",
     "axios": "^0.18.0",
-    "yargs": "^11.1.0",
+    "chromedriver": "^2.37.0",
+    "chalk": "^2.3.2",
     "jsdom": "^11.6.2",
-    "colors": "^1.2.1",
-    "mime-types": "^2.1.18"
+    "mime-types": "^2.1.18",
+    "ora": "^2.0.0",
+    "selenium-webdriver": "^3.6.0",
+    "yargs": "^11.1.0"
   },
   "license": "Apache-2.0",
   "engines": {

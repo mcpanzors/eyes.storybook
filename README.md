@@ -162,6 +162,7 @@ Options:
   --help, -h       Show help                                           [boolean]
   --version, -v    Show the version number                             [boolean]
   --conf, -c       Path to configuration file  [default: "applitools.config.js"]
+  --exitcode, -e   If tests failed close with non-zero exit code       [boolean]
   --local, -l      Force to use Browser mode                           [boolean]
   --build, -b      Enable building Storybook app before testing        [boolean]
   --info, -d       Display info about current running story            [boolean]

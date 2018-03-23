@@ -5,7 +5,8 @@
 /* eslint-disable no-console, global-require */
 const fs = require('fs');
 const path = require('path');
-const colors = require('colors/safe');
+const chalk = require('chalk');
+const ora = require('ora');
 
 const { Logger, ConsoleLogHandler, PromiseFactory } = require('@applitools/eyes.sdk.core');
 
@@ -34,7 +35,7 @@ const yargs = require('yargs')
     },
     exitcode: {
       alias: 'e',
-      description: 'Force to use Browser mode',
+      description: 'If tests failed close with non-zero exit code',
       requiresArg: false,
       boolean: true,
     },
@@ -96,7 +97,6 @@ if (yargs.debug) {
 } else if (yargs.verbose) {
   configs.showLogs = 'verbose';
   configs.showEyesSdkLogs = true;
-  configs.showStorybookOutput = true;
 } else if (yargs.info) {
   configs.showLogs = true;
 }
@@ -111,9 +111,9 @@ if (configs.showLogs) {
 
 
 /* --- Validating configuration --- */
-if (yargs.browser) {
+if (yargs.local) {
   configs.useVisualGrid = false;
-  logger.verbose('Forced Browser mode, due to --browser option.');
+  logger.verbose('Forced Browser mode, due to --local option.');
 }
 if (yargs.build) {
   configs.skipStorybookBuild = false;
@@ -159,34 +159,39 @@ if (!configs.appName) configs.appName = packageJson.name;
 if (!configs.storybookApp) configs.storybookApp = packageVersion.app;
 if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version;
 
+
 /* --- Main execution flow --- */
-let promise = promiseFactory.resolve();
-if (configs.useVisualGrid) {
-  /* --- Building Storybook and make screenshots remote using RenderingGrid --- */
-  promise = promise
-    .then(() => StorybookUtils.buildStorybook(logger, promiseFactory, configs))
-    .then(() => StorybookUtils.getStoriesFromStatic(logger, promiseFactory, configs))
-    .then(stories => {
+let testRunner;
+return promiseFactory.resolve()
+  .then(() => {
+    if (configs.useVisualGrid) {
       const EyesRenderingRunner = require('../lib/EyesRenderingRunner');
-      const runner = new EyesRenderingRunner(logger, promiseFactory, configs);
-      return runner.testStories(stories);
-    });
-} else {
-  /* --- Starting Storybook and make screenshots locally using WebDriver --- */
-  promise = promise
-    .then(() => StorybookUtils.startServer(logger, promiseFactory, configs))
-    .then(storybookAddress => { configs.storybookAddress = storybookAddress; })
-    .then(() => StorybookUtils.getStoriesFromWeb(logger, promiseFactory, configs))
-    .then(stories => {
-      const EyesWebDriverRunner = require('../lib/EyesWebDriverRunner');
-      const runner = new EyesWebDriverRunner(logger, promiseFactory, configs);
-      return runner.testStories(stories);
-    });
-}
+      testRunner = new EyesRenderingRunner(logger, promiseFactory, configs);
 
+      const spinner = ora('Building Storybook');
+      if (!configs.showLogs) spinner.start();
+      return StorybookUtils.buildStorybook(logger, promiseFactory, configs)
+        .then(() => { spinner.stop(); })
+        .catch(err => { spinner.stop(); throw err; });
+    }
 
-/* --- Prepare and display results --- */
-return promise
+    const EyesWebDriverRunner = require('../lib/EyesWebDriverRunner');
+    testRunner = new EyesWebDriverRunner(logger, promiseFactory, configs);
+
+    const spinner = ora('Starting Storybook');
+    if (!configs.showLogs) spinner.start();
+    return StorybookUtils.startServer(logger, promiseFactory, configs)
+      .then(storybookAddress => { spinner.stop(); configs.storybookAddress = storybookAddress; })
+      .catch(err => { spinner.stop(); throw err; });
+  })
+  .then(() => StorybookUtils.getStories(logger, promiseFactory, configs))
+  .then(stories => {
+    const spinner = ora('Processing stories');
+    if (!configs.showLogs) spinner.start();
+    return testRunner.testStories(stories)
+      .then(results => { spinner.stop(); return results; })
+      .catch(err => { spinner.stop(); throw err; });
+  })
   .then(/** TestResults[] */ results => {
     let exitCode = 0;
     if (results.length > 0) {
@@ -195,12 +200,12 @@ return promise
         const storyTitle = `${result.getName()} [${result.getHostDisplaySize().toString()}] - `;
 
         if (result.getIsNew()) {
-          console.log(storyTitle, colors.green('New'));
+          console.log(storyTitle, chalk.blue('New'));
         } else if (result.isPassed()) {
-          console.log(storyTitle, colors.green('Passed'));
+          console.log(storyTitle, chalk.green('Passed'));
         } else {
           const stepsFailed = result.getMismatches() + result.getMissing();
-          console.log(storyTitle, colors.red(`Failed ${stepsFailed} of ${result.getSteps()}`));
+          console.log(storyTitle, chalk.red(`Failed ${stepsFailed} of ${result.getSteps()}`));
 
           if (exitCode < EYES_TEST_FAILED_EXIT_CODE) {
             exitCode = EYES_TEST_FAILED_EXIT_CODE;
@@ -217,7 +222,7 @@ return promise
   .catch(err => {
     console.error(err);
     if (!yargs.debug) {
-      console.log('Run with --debug flag to see more logs.');
+      console.log('Run with `--debug` flag to see more logs.');
     }
 
     process.exit(1);
