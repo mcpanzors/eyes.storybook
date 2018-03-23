@@ -32,6 +32,12 @@ const yargs = require('yargs')
       requiresArg: true,
       default: DEFAULT_CONFIG_PATH,
     },
+    exitcode: {
+      alias: 'e',
+      description: 'Force to use Browser mode',
+      requiresArg: false,
+      boolean: true,
+    },
     local: {
       alias: 'l',
       description: 'Force to use Browser mode',
@@ -206,7 +212,7 @@ return promise
       console.log('Test is finished but no results returned.');
     }
 
-    process.exit(exitCode);
+    process.exit(yargs.exitcode ? exitCode : 0);
   })
   .catch(err => {
     console.error(err);
