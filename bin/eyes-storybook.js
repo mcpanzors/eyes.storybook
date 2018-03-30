@@ -11,7 +11,7 @@ const ora = require('ora');
 const { Logger, ConsoleLogHandler, PromiseFactory } = require('@applitools/eyes.sdk.core');
 
 const defaultConfig = require('../lib/DefaultConfig');
-const StorybookUtils = require('../lib/StorybookUtils');
+const { StorybookUtils } = require('../lib/StorybookUtils');
 const VERSION = require('../package.json').version;
 
 const DEFAULT_CONFIG_PATH = 'applitools.config.js';
@@ -165,7 +165,7 @@ let testRunner;
 return promiseFactory.resolve()
   .then(() => {
     if (configs.useVisualGrid) {
-      const EyesRenderingRunner = require('../lib/EyesRenderingRunner');
+      const { EyesRenderingRunner } = require('../lib/EyesRenderingRunner');
       testRunner = new EyesRenderingRunner(logger, promiseFactory, configs);
 
       const spinner = ora('Building Storybook');
@@ -175,7 +175,7 @@ return promiseFactory.resolve()
         .catch(err => { spinner.stop(); throw err; });
     }
 
-    const EyesWebDriverRunner = require('../lib/EyesWebDriverRunner');
+    const { EyesWebDriverRunner } = require('../lib/EyesWebDriverRunner');
     testRunner = new EyesWebDriverRunner(logger, promiseFactory, configs);
 
     const spinner = ora('Starting Storybook');
