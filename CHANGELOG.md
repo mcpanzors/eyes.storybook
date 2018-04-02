@@ -1,6 +1,12 @@
 # Changelog
 
 ## [Unreleased](https://github.com/applitools/eyes.storybook/compare/v1.5.0...HEAD)
+### BREAKING CHANGES
+- Renamed `useVisualGrid` config property to `useSelenium` (inverted). Default mode not changed.
+- `Browser mode` is renamed to `Selenium mode`. Renamed Browser classes to Selenium, Rendering to VisualGrid.
+
+### Features
+- Renamed several variables which contained reference to Storybook 3 (because they are used in Storybook 4 too)
 
 ## [1.5.0](https://github.com/applitools/eyes.storybook/compare/v1.4.1...v1.5.0) - 2018-04-02
 ### BREAKING CHANGES

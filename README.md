@@ -85,12 +85,6 @@ module.exports = {
 
     /* Only for VisualGrid mode */
 
-    // `useVisualGrid` defines a mode in which to work. VisualGrid mode creates a Storybook build
-    // and send it to a VisualGrid service which creates a screenshots of each story (in a cloud).
-    // Browser mode starts a browsers locally and makes screenshots locally, after that
-    // send only images for validation
-    useVisualGrid: true, // default mode is VisualGrid mode, change this to `false` to use Browser mode
-
     // `skipStorybookBuild` defines whether or not will be run `build-storybook` command.
     skipStorybookBuild: true, // make sure it is set to `false` if you made changes in your app
 
@@ -99,7 +93,13 @@ module.exports = {
     storybookOutputDir: process.env.SBCONFIG_OUTPUT_DIR || './storybook-static', // Storybook default
 
 
-    /* Only for Browser mode */
+    /* Only for Selenium mode */
+    
+    // `useSelenium` defines a mode in which to work. VisualGrid mode creates a Storybook build
+    // and send it to a VisualGrid service which creates a screenshots of each story (in a cloud).
+    // Selenium mode starts a browsers locally and makes screenshots locally, after that send
+    // only images for validation
+    useSelenium: false, // default mode is VisualGrid mode, change this to `true` to use Selenium mode
 
     // `storybookAddress` defines an address to an external Storybook server. Define this value
     // only in case if you don't want that starting Storybook was part of our process.
@@ -163,7 +163,7 @@ Options:
   --version, -v    Show the version number                             [boolean]
   --conf, -c       Path to configuration file  [default: "applitools.config.js"]
   --exitcode, -e   If tests failed close with non-zero exit code       [boolean]
-  --local, -l      Force to use Browser mode                           [boolean]
+  --local, -l      Force to use Selenium mode                          [boolean]
   --build, -b      Enable building Storybook app before testing        [boolean]
   --info, -d       Display info about current running story            [boolean]
   --verbose, --dd  Display data about current running method           [boolean]

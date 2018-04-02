@@ -11,7 +11,7 @@ const ora = require('ora');
 const { Logger, ConsoleLogHandler, PromiseFactory } = require('@applitools/eyes.sdk.core');
 
 const defaultConfig = require('../lib/DefaultConfig');
-const { StorybookUtils } = require('../lib/StorybookUtils');
+const { EyesStorybookUtils } = require('../lib/EyesStorybookUtils');
 const VERSION = require('../package.json').version;
 
 const DEFAULT_CONFIG_PATH = 'applitools.config.js';
@@ -41,7 +41,7 @@ const yargs = require('yargs')
     },
     local: {
       alias: 'l',
-      description: 'Force to use Browser mode',
+      description: 'Force to use Selenium mode',
       requiresArg: false,
       boolean: true,
     },
@@ -112,8 +112,8 @@ if (configs.showLogs) {
 
 /* --- Validating configuration --- */
 if (yargs.local) {
-  configs.useVisualGrid = false;
-  logger.verbose('Forced Browser mode, due to --local option.');
+  configs.useSelenium = true;
+  logger.verbose('Forced Selenium mode, due to --local option.');
 }
 if (yargs.build) {
   configs.skipStorybookBuild = false;
@@ -154,7 +154,7 @@ if (!fs.existsSync(packageJsonPath)) {
   throw new Error(`package.json not found on path: ${packageJsonPath}`);
 }
 const packageJson = require(packageJsonPath); // eslint-disable-line import/no-dynamic-require
-const packageVersion = StorybookUtils.retrieveStorybookVersion(packageJson, SUPPORTED_STORYBOOK3_APPS);
+const packageVersion = EyesStorybookUtils.retrieveStorybookVersion(packageJson, SUPPORTED_STORYBOOK3_APPS);
 if (!configs.appName) configs.appName = packageJson.name;
 if (!configs.storybookApp) configs.storybookApp = packageVersion.app;
 if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version;
@@ -164,27 +164,27 @@ if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version
 let testRunner;
 return promiseFactory.resolve()
   .then(() => {
-    if (configs.useVisualGrid) {
-      const { EyesRenderingRunner } = require('../lib/EyesRenderingRunner');
-      testRunner = new EyesRenderingRunner(logger, promiseFactory, configs);
+    if (configs.useSelenium) {
+      const { EyesSeleniumRunner } = require('../lib/EyesSeleniumRunner');
+      testRunner = new EyesSeleniumRunner(logger, promiseFactory, configs);
 
-      const spinner = ora('Building Storybook');
+      const spinner = ora('Starting Storybook');
       if (!configs.showLogs) spinner.start();
-      return StorybookUtils.buildStorybook(logger, promiseFactory, configs)
-        .then(() => { spinner.stop(); })
+      return EyesStorybookUtils.startServer(logger, promiseFactory, configs)
+        .then(storybookAddress => { spinner.stop(); configs.storybookAddress = storybookAddress; })
         .catch(err => { spinner.stop(); throw err; });
     }
 
-    const { EyesWebDriverRunner } = require('../lib/EyesWebDriverRunner');
-    testRunner = new EyesWebDriverRunner(logger, promiseFactory, configs);
+    const { EyesVisualGridRunner } = require('../lib/EyesVisualGridRunner');
+    testRunner = new EyesVisualGridRunner(logger, promiseFactory, configs);
 
-    const spinner = ora('Starting Storybook');
+    const spinner = ora('Building Storybook');
     if (!configs.showLogs) spinner.start();
-    return StorybookUtils.startServer(logger, promiseFactory, configs)
-      .then(storybookAddress => { spinner.stop(); configs.storybookAddress = storybookAddress; })
+    return EyesStorybookUtils.buildStorybook(logger, promiseFactory, configs)
+      .then(() => { spinner.stop(); })
       .catch(err => { spinner.stop(); throw err; });
   })
-  .then(() => StorybookUtils.getStories(logger, promiseFactory, configs))
+  .then(() => EyesStorybookUtils.getStories(logger, promiseFactory, configs))
   .then(stories => {
     const spinner = ora('Processing stories');
     if (!configs.showLogs) spinner.start();
