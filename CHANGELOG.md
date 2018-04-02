@@ -1,15 +1,18 @@
 # Changelog
 
-## [Unreleased](https://github.com/applitools/eyes.storybook/compare/v1.4.1...HEAD)
+## [Unreleased](https://github.com/applitools/eyes.storybook/compare/v1.5.0...HEAD)
+
+## [1.5.0](https://github.com/applitools/eyes.storybook/compare/v1.4.1...v1.5.0) - 2018-04-02
 ### BREAKING CHANGES
-- Changed `--verbose` and `--debug` options' alias to `-d` and `--dd` accordingly
-- Renamed `useRenderer` to `useVisualGrid`. Changed default to active
-- Set `skipStorybookBuild` to `false` by default
+- Changed `--verbose` and `--debug` options' aliases to `-d` and `--dd` accordingly
+- Renamed `useRenderer` config property to `useVisualGrid`. Changed default value to `true`
+- Set `skipStorybookBuild` config property to `true` by default
 - Added `--exitcode` option to use non-zero exit code when tests failed (previously this behaviour was active by default)
 - Disabled printing logs by default
 
 ### Features
 - Updated README file, now includes detailed descriptions
+- Added CHANGELOG file
 - Added log message which indicates when no config loaded
 - Added `--build` option, to force storybook build 
 - Added `--info` option, to display base logs
