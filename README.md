@@ -71,7 +71,7 @@ module.exports = {
     storybookApp: undefined, // default is extracted from dependencies of your package.json 
 
     // `storybookVersion` is related to `storybookApp` and handled in the similar way, defines
-    // which version of Storybook are you using, possible values [2, 3]
+    // which version of Storybook are you using, possible values [2, 3, 4]
     storybookVersion: undefined, // default is extracted from dependencies of your package.json
 
     // `storybookConfigDir` defines directory where to load Storybook configurations from.
