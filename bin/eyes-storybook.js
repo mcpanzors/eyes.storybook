@@ -201,7 +201,7 @@ return promiseFactory.resolve()
   .then(stories => {
     const spinner = ora('Processing stories');
     if (!configs.showLogs) spinner.start();
-    return testRunner.testStories(stories)
+    return testRunner.testStories(stories, spinner)
       .then(results => { spinner.stop(); return results; })
       .catch(err => { spinner.stop(); throw err; });
   })
