@@ -4,6 +4,7 @@
 ### BREAKING CHANGES
 - Renamed `useVisualGrid` config property to `useSelenium` (inverted). Default mode not changed.
 - `Browser mode` is renamed to `Selenium mode`. Renamed Browser classes to Selenium, Rendering to VisualGrid.
+- `selenium-webdriver` and `chromedriver` modules were removed from dependencies. If you would like to use Selenium mode, you need to install them manually.
 
 ### Features
 - Renamed several variables which contained reference to Storybook 3 (because they are used in Storybook 4 too)
