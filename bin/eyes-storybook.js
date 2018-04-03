@@ -165,8 +165,21 @@ let testRunner;
 return promiseFactory.resolve()
   .then(() => {
     if (configs.useSelenium) {
-      const { EyesSeleniumRunner } = require('../lib/EyesSeleniumRunner');
-      testRunner = new EyesSeleniumRunner(logger, promiseFactory, configs);
+      try {
+        const { EyesSeleniumRunner } = require('../lib/EyesSeleniumRunner');
+        testRunner = new EyesSeleniumRunner(logger, promiseFactory, configs);
+      } catch (e) {
+        if (e.code === 'MODULE_NOT_FOUND') {
+          console.info(chalk.red('\nYou are trying to run Selenium (local) mode with missing dependencies. ' +
+            'Please, add next packages to your project:'));
+          console.info(chalk.green('npm install selenium-webdriver@^3.0.0 --save-dev'));
+          console.info(chalk.green('npm install chromedriver@^2.0.0 --save-dev'));
+          process.exit(1);
+        }
+
+        throw e;
+      }
+
 
       const spinner = ora('Starting Storybook');
       if (!configs.showLogs) spinner.start();

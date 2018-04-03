@@ -45,15 +45,17 @@
     "eyes-storybook": "./bin/eyes-storybook.js"
   },
   "dependencies": {
-    "@applitools/eyes.sdk.core": "~1.5.0",
+    "@applitools/eyes.sdk.core": "~1.5.1",
     "axios": "^0.18.0",
-    "chromedriver": "^2.37.0",
     "chalk": "^2.3.2",
-    "jsdom": "^11.6.2",
+    "jsdom": "^11.7.0",
     "mime-types": "^2.1.18",
     "ora": "^2.0.0",
-    "selenium-webdriver": "^3.6.0",
     "yargs": "^11.1.0"
+  },
+  "devDependencies": {
+    "selenium-webdriver": "^3.6.0",
+    "chromedriver": "^2.37.0"
   },
   "license": "Apache-2.0",
   "engines": {
