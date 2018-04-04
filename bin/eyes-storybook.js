@@ -16,7 +16,8 @@ const VERSION = require('../package.json').version;
 
 const DEFAULT_CONFIG_PATH = 'applitools.config.js';
 const EYES_TEST_FAILED_EXIT_CODE = 130;
-const SUPPORTED_STORYBOOK3_APPS = ['react', 'vue', 'react-native', 'angular', 'polymer'];
+const SUPPORTED_STORYBOOK_APPS = ['react', 'vue', 'react-native', 'angular', 'polymer'];
+const SUPPORTED_VISUALGRID_BROWSERS = ['chrome', 'firefox'];
 
 /* --- Create CLI --- */
 const yargs = require('yargs')
@@ -125,8 +126,8 @@ if (!configs.apiKey) {
 if (!configs.maxConcurrency && configs.maxConcurrency !== 0) {
   throw new Error('maxConcurrency should be defined.');
 }
-if (configs.storybookApp && !SUPPORTED_STORYBOOK3_APPS.includes(configs.storybookApp)) {
-  throw new Error(`storybookApp should be one of [${SUPPORTED_STORYBOOK3_APPS}].`);
+if (configs.storybookApp && !SUPPORTED_STORYBOOK_APPS.includes(configs.storybookApp)) {
+  throw new Error(`storybookApp should be one of [${SUPPORTED_STORYBOOK_APPS}].`);
 }
 if (configs.storybookVersion && ![2, 3].includes(configs.storybookVersion)) {
   throw new Error('storybookVersion should be 2 or 3.');
@@ -146,6 +147,9 @@ if (configs.viewportSize) {
     }
   });
 }
+if (!configs.useSelenium && !SUPPORTED_VISUALGRID_BROWSERS.includes(configs.capabilities.browserName)) {
+  throw new Error(`browserName should be one of [${SUPPORTED_VISUALGRID_BROWSERS}].`);
+}
 
 
 /* --- Parsing package.json, retrieving appName, storybookApp and storybookVersion --- */
@@ -154,7 +158,7 @@ if (!fs.existsSync(packageJsonPath)) {
   throw new Error(`package.json not found on path: ${packageJsonPath}`);
 }
 const packageJson = require(packageJsonPath); // eslint-disable-line import/no-dynamic-require
-const packageVersion = EyesStorybookUtils.retrieveStorybookVersion(packageJson, SUPPORTED_STORYBOOK3_APPS);
+const packageVersion = EyesStorybookUtils.retrieveStorybookVersion(packageJson, SUPPORTED_STORYBOOK_APPS);
 if (!configs.appName) configs.appName = packageJson.name;
 if (!configs.storybookApp) configs.storybookApp = packageVersion.app;
 if (!configs.storybookVersion) configs.storybookVersion = packageVersion.version;
