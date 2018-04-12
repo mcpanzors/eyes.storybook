@@ -11,6 +11,7 @@
 - Renamed several variables which contained reference to Storybook 3 (because they are used in Storybook 4 too)
 - Progress bar updated, added display of number of processed stories
 - Added ability to change browser for VisualGrid testing. To do that use `capabilities`.`browserName` property similar to Selenium config. Currently supported values are `chrome` and `firefox`
+- Get default batch name from `APPLITOOLS_BATCH_NAME` env variable
 
 ## [1.5.0](https://github.com/applitools/eyes.storybook/compare/v1.4.1...v1.5.0) - 2018-04-02
 ### BREAKING CHANGES
