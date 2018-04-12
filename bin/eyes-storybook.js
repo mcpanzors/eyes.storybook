@@ -132,9 +132,9 @@ if (configs.storybookApp && !SUPPORTED_STORYBOOK_APPS.includes(configs.storybook
 if (configs.storybookVersion && ![2, 3].includes(configs.storybookVersion)) {
   throw new Error('storybookVersion should be 2 or 3.');
 }
-if (configs.storybookAddress) {
-  if (!configs.storybookAddress.endsWith('/')) {
-    configs.storybookAddress += '/';
+if (configs.storybookUrl) {
+  if (!configs.storybookUrl.endsWith('/')) {
+    configs.storybookUrl += '/';
   }
 }
 if (configs.viewportSize) {
@@ -184,11 +184,10 @@ return promiseFactory.resolve()
         throw e;
       }
 
-
       const spinner = ora('Starting Storybook');
       if (!configs.showLogs) spinner.start();
       return EyesStorybookUtils.startServer(logger, promiseFactory, configs)
-        .then(storybookAddress => { spinner.stop(); configs.storybookAddress = storybookAddress; })
+        .then(storybookUrl => { spinner.stop(); configs.storybookUrl = storybookUrl; })
         .catch(err => { spinner.stop(); throw err; });
     }
 

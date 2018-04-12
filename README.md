@@ -101,22 +101,22 @@ module.exports = {
     // only images for validation
     useSelenium: false, // default mode is VisualGrid mode, change this to `true` to use Selenium mode
 
-    // `storybookAddress` defines an address to an external Storybook server. Define this value
+    // `storybookUrl` defines an address to an external Storybook server. Define this value
     // only in case if you don't want that starting Storybook was part of our process.
     // The value should be like 'http://localhost:9001/'
-    storybookAddress: undefined, // by default we will start Storybook server in the process
+    storybookUrl: undefined, // by default we will start Storybook server in the process
 
     // `storybookPort` defines port on which we will start Storybook server. The value
-    // is not related to `storybookAddress` and will be ignored if you specify both values
+    // is not related to `storybookUrl` and will be ignored if you specify both values
     storybookPort: process.env.SBCONFIG_PORT || 9001, // Storybook default
 
     // `storybookHost` defines host on which we will start Storybook server. The value
-    // is similar to `storybookPort`, can't be used with `storybookAddress`
+    // is similar to `storybookPort`, can't be used with `storybookUrl`
     storybookHost: process.env.SBCONFIG_HOSTNAME || 'localhost', // Storybook default
 
-    // `seleniumAddress` defines address to selenium server. You can use the next url as 
+    // `seleniumUrl` defines address to selenium server. You can use the next url as 
     // an example: 'http://localhost:4444/wd/hub'
-    seleniumAddress: undefined, // by default we start build-in selenium server
+    seleniumUrl: undefined, // by default we start build-in selenium server
 
     // `capabilities` defines capabilities that will be passed to WebDriver. You can add
     // options or change browser (make sure that you have required WebDriver in your PATH)
@@ -172,7 +172,7 @@ Options:
 
 ### Run storybook server separately
 
-If you would like to run storybook server out of the eyes-storybook execution, you should specify `storybookAddress` option in your `applitools.config.js` file and add the following line to the end of `.storybook/config.js`:
+If you would like to run storybook server out of the eyes-storybook execution, you should specify `storybookUrl` option in your `applitools.config.js` file and add the following line to the end of `.storybook/config.js`:
 
 **Storybook v2:**
 
