@@ -14,6 +14,7 @@
 - Added ability to change browser for VisualGrid testing. To do that use `capabilities`.`browserName` property similar to Selenium config. Currently supported values are `chrome` and `firefox`
 - Get default batch name from `APPLITOOLS_BATCH_NAME` env variable
 - RenderRequest updated, now include render height too (previously only width was used)
+- Updated dependencies
 
 ## [1.5.0](https://github.com/applitools/eyes.storybook/compare/v1.4.1...v1.5.0) - 2018-04-02
 ### BREAKING CHANGES
