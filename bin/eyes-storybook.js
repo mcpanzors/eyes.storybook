@@ -40,6 +40,11 @@ const yargs = require('yargs')
       requiresArg: false,
       boolean: true,
     },
+    legacy: {
+      description: 'Use old implementation of VisualGrid test runner',
+      requiresArg: false,
+      boolean: true,
+    },
     local: {
       alias: 'l',
       description: 'Force to use Selenium mode',
@@ -191,7 +196,8 @@ return promiseFactory.resolve()
         .catch(err => { spinner.stop(); throw err; });
     }
 
-    const { EyesVisualGridRunner } = require('../lib/EyesVisualGridRunner');
+    // eslint-disable-next-line max-len
+    const { EyesVisualGridRunner } = yargs.legacy ? require('../lib/EyesVisualGridLegacyRunner') : require('../lib/EyesVisualGridRunner');
     testRunner = new EyesVisualGridRunner(logger, promiseFactory, configs);
 
     const spinner = ora('Building Storybook');

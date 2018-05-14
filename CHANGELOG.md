@@ -6,6 +6,7 @@
 - Renamed `storybookAddress` and `seleniumAddress` config properties to `storybookUrl` and `seleniumUrl` accordingly.
 - `Browser mode` is renamed to `Selenium mode`. Renamed Browser classes to Selenium, Rendering to VisualGrid.
 - `selenium-webdriver` and `chromedriver` modules were removed from dependencies. If you would like to use Selenium mode, you need to install them manually
+- Use bulk `/render` and `/render-status` requests to VisualGrid, no concurrency limit (if for some reason you want to use old one, add `--legacy` option)
 
 ### Features
 - Renamed several variables which contained reference to Storybook 3 (because they are used in Storybook 4 too)
