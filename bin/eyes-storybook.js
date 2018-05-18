@@ -8,7 +8,7 @@ const path = require('path');
 const chalk = require('chalk');
 const ora = require('ora');
 
-const { Logger, ConsoleLogHandler, PromiseFactory } = require('@applitools/eyes.sdk.core');
+const { Logger, ConsoleLogHandler, PromiseFactory, TestResultsFormatter } = require('@applitools/eyes.sdk.core');
 
 const defaultConfig = require('../lib/DefaultConfig');
 const { EyesStorybookUtils } = require('../lib/EyesStorybookUtils');
@@ -215,10 +215,14 @@ return promiseFactory.resolve()
       .catch(err => { spinner.stop(); throw err; });
   })
   .then(/** TestResults[] */ results => {
+    const resultsFormatter = new TestResultsFormatter();
+
     let exitCode = 0;
     if (results.length > 0) {
       console.log('\n[EYES: TEST RESULTS]:');
       results.forEach(result => {
+        resultsFormatter.addResults(result);
+
         const storyTitle = `${result.getName()} [${result.getHostDisplaySize().toString()}] - `;
 
         if (result.getIsNew()) {
@@ -237,6 +241,10 @@ return promiseFactory.resolve()
       console.log('See details at', results[0].getAppUrls().getBatch());
     } else {
       console.log('Test is finished but no results returned.');
+    }
+
+    if (configs.tapFilePath) {
+      EyesStorybookUtils.writeResultsFile(configs.tapFilePath, resultsFormatter.asHierarchicTAPString(false, true));
     }
 
     process.exit(yargs.exitcode ? exitCode : 0);

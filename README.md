@@ -63,6 +63,10 @@ module.exports = {
     maxConcurrency: 0, // default is 0, which means not limited connections to VisualGrid service
                        // or 10 for headless browsers (should be set 1 for non-headless browser)
 
+    // `tapFilePath` is a path to TAP results file, the path is relative to directory
+    // from which you run the test and should contains filename, e.g. './results.tap'
+    tapFilePath: undefined, // by default we don't create the file anywhere
+
 
     /* Storybook configuration */
 
