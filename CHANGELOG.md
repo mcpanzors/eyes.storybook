@@ -11,7 +11,7 @@
 ### Features
 - Renamed several variables which contained reference to Storybook 3 (because they are used in Storybook 4 too)
 - Progress bar updated, added display of number of processed stories
-- Added ability to change browser for VisualGrid testing. To do that use `capabilities`.`browserName` property similar to Selenium config. Currently supported values are `chrome` and `firefox`
+- Added ability to change platform and browser for VisualGrid testing. To do that use `capabilities`.`platform` and `capabilities`.`browserName` properties similar to Selenium config. Currently supported values are `chrome` and `firefox` for `browserName`, `platform` values will be added later
 - Get default batch name from `APPLITOOLS_BATCH_NAME` env variable
 - RenderRequest updated, now include render height too (previously only width was used)
 - Updated dependencies

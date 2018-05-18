@@ -121,7 +121,8 @@ module.exports = {
     // `capabilities` defines capabilities that will be passed to WebDriver. You can add
     // options or change browser (make sure that you have required WebDriver in your PATH)
     capabilities: { // by default we use chrome in headless mode
-        browserName: 'chrome',
+        platform: 'any', // [] no currently supported values, will be added soon
+        browserName: 'chrome', // ['chrome', 'firefox']
         chromeOptions: { // you can add other options there, like '--force-device-scale-factor=2'
             args: ['--headless', '--disable-gpu'],
         },
