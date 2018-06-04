@@ -1,6 +1,11 @@
 # Changelog
 
-## [Unreleased](https://github.com/applitools/eyes.storybook/compare/v1.5.0...HEAD)
+## [Unreleased](https://github.com/applitools/eyes.storybook/compare/v1.6.0...HEAD)
+### Bug Fixes
+- Fixed en error which occurred on big bulk requests, because of empty objects in `/render-status` response
+- Increased timeouts between `/render-status` requests
+
+## [1.6.0](https://github.com/applitools/eyes.storybook/compare/v1.5.0...v1.6.0) - 2018-05-24
 ### BREAKING CHANGES
 - Renamed `useVisualGrid` config property to `useSelenium` (inverted). Default mode not changed.
 - Renamed `storybookAddress` and `seleniumAddress` config properties to `storybookUrl` and `seleniumUrl` accordingly.
