@@ -102,7 +102,8 @@ module.exports = {
     // and send it to a VisualGrid service which creates a screenshots of each story (in a cloud).
     // Selenium mode starts a browsers locally and makes screenshots locally, after that send
     // only images for validation
-    useSelenium: false, // default mode is VisualGrid mode, change this to `true` to use Selenium mode
+    useSelenium: false, // default mode is VisualGrid (remote) mode,
+                        // change this to `true` to use Selenium (local) mode
 
     // `storybookUrl` defines an address to an external Storybook server. Define this value
     // only in case if you don't want that starting Storybook was part of our process.
@@ -121,13 +122,18 @@ module.exports = {
     // an example: 'http://localhost:4444/wd/hub'
     seleniumUrl: undefined, // by default we start build-in selenium server
 
-    // `capabilities` defines capabilities that will be passed to WebDriver. You can add
-    // options or change browser (make sure that you have required WebDriver in your PATH)
+    // `capabilities` defines capabilities that will be passed to WebDriver when using local
+    // testing or will be send as configuration of VisualGrid when using remote testing.
+    // In Browser mode the `capabilities` directly passed to Selenium server, see docs
+    // https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities
     capabilities: { // by default we use chrome in headless mode
-        platform: 'any', // [] no currently supported values, will be added soon
-        browserName: 'chrome', // ['chrome', 'firefox']
-        chromeOptions: { // you can add other options there, like '--force-device-scale-factor=2'
-            args: ['--headless', '--disable-gpu'],
+        platform: 'any', // local: the current system platform will be used
+                         // remote: [] no currently supported values, will be added soon
+        browserName: 'chrome', // local: make sure that you have required WebDriver in your PATH
+                               // remote: ['chrome', 'firefox'], an array is also possible
+        chromeOptions: { // used to set arguments for browser in local-only mode
+                         // the name can be different depends of browser, see Selenium docs
+            args: ['--headless', '--disable-gpu'], // any, e.g. '--force-device-scale-factor=2'
         },
     },
 

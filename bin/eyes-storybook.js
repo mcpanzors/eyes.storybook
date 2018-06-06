@@ -152,8 +152,27 @@ if (configs.viewportSize) {
     }
   });
 }
-if (!configs.useSelenium && !SUPPORTED_VISUALGRID_BROWSERS.includes(configs.capabilities.browserName)) {
-  throw new Error(`browserName should be one of [${SUPPORTED_VISUALGRID_BROWSERS}].`);
+
+if (configs.useSelenium) { // local mode rules
+  if (Array.isArray(configs.capabilities.browserName)) {
+    throw new Error('browserName should be single item, array is not supported in Browser (local) mode.');
+  }
+} else if (yargs.legacy) { // remote (legacy) mode rules
+  if (Array.isArray(configs.capabilities.browserName)) {
+    throw new Error('browserName should be single item, array is not supported in VisualGrid-legacy mode.');
+  }
+  if (!SUPPORTED_VISUALGRID_BROWSERS.includes(configs.capabilities.browserName)) {
+    throw new Error(`Given browserName is not supported, possible values [${SUPPORTED_VISUALGRID_BROWSERS}].`);
+  }
+} else { // remote mode rules
+  if (!Array.isArray(configs.capabilities.browserName)) {
+    configs.capabilities.browserName = [configs.capabilities.browserName];
+  }
+  configs.capabilities.browserName.forEach(browserName => {
+    if (!SUPPORTED_VISUALGRID_BROWSERS.includes(browserName)) {
+      throw new Error(`Given browserName is not supported, possible values [${SUPPORTED_VISUALGRID_BROWSERS}].`);
+    }
+  });
 }
 
 

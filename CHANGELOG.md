@@ -1,6 +1,17 @@
 # Changelog
 
-## [Unreleased](https://github.com/applitools/eyes.storybook/compare/v1.6.0...HEAD)
+## [Unreleased](https://github.com/applitools/eyes.storybook/compare/v1.6.1...HEAD)
+### Features
+- `chromedriver` dependency is not mandatory for Browser (local) mode, if you already have WebDriver in your PATH, you can skip this dependency.
+- In VisualGrid (remote) mode, you can set multiple browsers in `capabilities`.`browserName` property. Tests will be preformed on all of them.
+
+### Bug Fixes
+- Close WebDriver when all tests completed in Browser (local) mode
+
+### BREAKING CHANGES
+- Changed default value of `viewportSize` property. Now only one size (800x600) will be used.
+
+## [1.6.1](https://github.com/applitools/eyes.storybook/compare/v1.6.0...v1.6.1) - 2018-06-05
 ### Bug Fixes
 - Fixed en error which occurred on big bulk requests, because of empty objects in `/render-status` response
 - Increased timeouts between `/render-status` requests
