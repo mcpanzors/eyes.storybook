@@ -55,8 +55,7 @@ module.exports = {
     // `viewportSize` is the required browser's viewport size or a list of sizes. It can be
     // an array of objects or a single object, e.g. {width: 800, height: 600}
     viewportSize: [
-        {width: 750, height: 600}, // by default used the viewport sizes
-        {width: 1366, height: 768},
+        {width: 800, height: 600}, // by default we use the value
     ],
 
     // `maxConcurrency` is a number of parallel browsers or connections to VisualGrid service
