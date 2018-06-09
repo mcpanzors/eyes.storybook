@@ -4,6 +4,7 @@
 ### Features
 - `chromedriver` dependency is not mandatory for Browser (local) mode, if you already have WebDriver in your PATH, you can skip this dependency.
 - In VisualGrid (remote) mode, you can set multiple browsers in `capabilities`.`browserName` property. Tests will be preformed on all of them.
+- Added `eyes-setup` script which allows automatically update Storybook's config (It adds code which exports Storybook to `window` object).
 
 ### Bug Fixes
 - Close WebDriver when all tests completed in Browser (local) mode

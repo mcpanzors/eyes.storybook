@@ -188,6 +188,8 @@ Rules below also applicable, if you would like to disable execution of `build-st
 
 To access list of stories we need a way to access Storybook from browser. Please add lines below to Storybook's config file (default path is `.storybook/config.js`).
 
+This process also can be done automatically by using `eyes-setup` script.
+
 **Storybook v2:**
 
     if (typeof window === 'object') window.__storybook_stories__ = require('@kadira/storybook').getStorybook();

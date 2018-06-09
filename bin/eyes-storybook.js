@@ -270,7 +270,7 @@ return promiseFactory.resolve()
     }
 
     if (configs.tapFilePath) {
-      EyesStorybookUtils.writeResultsFile(configs.tapFilePath, resultsFormatter.asHierarchicTAPString(false, true));
+      EyesStorybookUtils.writeFile(path.resolve(process.cwd(), configs.tapFilePath), resultsFormatter.asHierarchicTAPString(false, true));
     }
 
     process.exit(yargs.exitcode ? exitCode : 0);
