@@ -126,7 +126,14 @@ if (yargs.skipBuild) {
   logger.verbose('Build Storybook skipped, due to --skip-build option.');
 }
 if (!configs.apiKey) {
-  throw new Error('The Applitools API Key is missing. Please add it to your configuration file or set ENV key.');
+  console.info(chalk.red('\nEnvironment variable APPLITOOLS_API_KEY is not set.'));
+  console.info(chalk.green('\nTo fix:'));
+  console.info(chalk.green('1. Register for Applitools developer account at www.applitools.com/devreg'));
+  console.info(chalk.green('2. Get API key from menu'));
+  console.info(chalk.green('3. Set APPLITOOLS_API_KEY environment variable\n' +
+    'Mac/Linux: export APPLITOOLS_API_KEY=Your_API_Key_Here\n' +
+    'Windows: set APPLITOOLS_API_KEY=Your_API_Key_Here'));
+  process.exit(1);
 }
 if (!configs.maxConcurrency && configs.maxConcurrency !== 0) {
   throw new Error('maxConcurrency should be defined.');
@@ -198,8 +205,8 @@ return promiseFactory.resolve()
         testRunner = new EyesSeleniumRunner(logger, promiseFactory, configs);
       } catch (e) {
         if (e.code === 'MODULE_NOT_FOUND') {
-          console.info(chalk.red('\nYou are trying to run Selenium (local) mode with missing dependencies. ' +
-            'Please, add next packages to your project:'));
+          console.info(chalk.red('\nYou are trying to run Selenium (local) mode with missing dependencies.'));
+          console.info(chalk.green('\nTo fix:'));
           console.info(chalk.green('npm install selenium-webdriver@^3.0.0 --save-dev'));
           console.info(chalk.green('npm install chromedriver@^2.0.0 --save-dev'));
           process.exit(1);
