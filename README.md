@@ -89,7 +89,7 @@ module.exports = {
     /* Only for VisualGrid mode */
 
     // `skipStorybookBuild` defines whether or not will be run `build-storybook` command.
-    skipStorybookBuild: true, // make sure it is set to `false` if you made changes in your app
+    skipStorybookBuild: false, // if you use your custom build command, set this to `true`
 
     // `storybookOutputDir` defines directory where to store built files.
     // The value will be passed to Storybook via `--output-dir` option
@@ -169,20 +169,24 @@ Below you can see output of the `--help` option.
 Usage: eyes-storybook [options]
 
 Options:
-  --help, -h       Show help                                           [boolean]
-  --version, -v    Show the version number                             [boolean]
-  --conf, -c       Path to configuration file  [default: "applitools.config.js"]
-  --exitcode, -e   If tests failed close with non-zero exit code       [boolean]
-  --local, -l      Force to use Selenium mode                          [boolean]
-  --build, -b      Enable building Storybook app before testing        [boolean]
-  --info, -d       Display info about current running story            [boolean]
-  --verbose, --dd  Display data about current running method           [boolean]
-  --debug, --ddd   Display all possible logs and debug information     [boolean]
+  --help, -h        Show help                                          [boolean]
+  --version, -v     Show the version number                            [boolean]
+  --conf, -c        Path to configuration file [default: "applitools.config.js"]
+  --exitcode, -e    If tests failed close with non-zero exit code      [boolean]
+  --local, -l       Force to use Selenium mode                         [boolean]
+  --skip-build, -s  Disable building Storybook app before testing      [boolean]
+  --info, -d        Display info about current running story           [boolean]
+  --verbose, --dd   Display data about current running method          [boolean]
+  --debug, --ddd    Display all possible logs and debug information    [boolean]
 ```
 
-### Run storybook server separately
+### Custom build process or independent server
 
-If you would like to run storybook server out of the eyes-storybook execution, you should specify `storybookUrl` option in your `applitools.config.js` file and add the following line to the end of `.storybook/config.js`:
+If you would like to run Storybook server out of the `eyes-storybook` execution, you should specify `storybookUrl` option in your `applitools.config.js` file and update Storybook's config file according to rules below.
+ 
+Rules below also applicable, if you would like to disable execution of `build-storybook` command during `eys-storybook` (to do that you can use `--skip-build` option (or add option to `applitools.config.js`)).
+
+To access list of stories we need a way to access Storybook from browser. Please add lines below to Storybook's config file (default path is `.storybook/config.js`).
 
 **Storybook v2:**
 

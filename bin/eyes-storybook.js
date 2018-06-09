@@ -51,9 +51,9 @@ const yargs = require('yargs')
       requiresArg: false,
       boolean: true,
     },
-    build: {
-      alias: 'b',
-      description: 'Enable building Storybook app before testing',
+    'skip-build': {
+      alias: 's',
+      description: 'Disable building Storybook app before testing',
       requiresArg: false,
       boolean: true,
     },
@@ -121,9 +121,9 @@ if (yargs.local) {
   configs.useSelenium = true;
   logger.verbose('Forced Selenium mode, due to --local option.');
 }
-if (yargs.build) {
-  configs.skipStorybookBuild = false;
-  logger.verbose('Build Storybook enabled, due to --build option.');
+if (yargs.skipBuild) {
+  configs.skipStorybookBuild = true;
+  logger.verbose('Build Storybook skipped, due to --skip-build option.');
 }
 if (!configs.apiKey) {
   throw new Error('The Applitools API Key is missing. Please add it to your configuration file or set ENV key.');

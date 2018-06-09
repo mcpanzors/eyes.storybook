@@ -10,6 +10,7 @@
 
 ### BREAKING CHANGES
 - Changed default value of `viewportSize` property. Now only one size (800x600) will be used.
+- Execution of `eyes-storybook` will run `build-storybook` by default. Also `--build` option is removed and new option `--skip-build` added.
 
 ## [1.6.1](https://github.com/applitools/eyes.storybook/compare/v1.6.0...v1.6.1) - 2018-06-05
 ### Bug Fixes
