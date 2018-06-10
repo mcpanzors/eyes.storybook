@@ -5,6 +5,7 @@
 /* eslint-disable no-console, global-require */
 const fs = require('fs');
 const path = require('path');
+const yargs = require('yargs');
 const chalk = require('chalk');
 const ora = require('ora');
 
@@ -20,23 +21,59 @@ const SUPPORTED_STORYBOOK_APPS = ['react', 'vue', 'react-native', 'angular', 'po
 const SUPPORTED_VISUALGRID_BROWSERS = ['chrome', 'firefox'];
 
 /* --- Create CLI --- */
-const yargs = require('yargs')
-  .usage('Usage: $0 [options]')
+const cliOptions = yargs.usage('Usage: $0 [options]')
   .epilogue('Check our documentation here: https://applitools.com/resources/tutorial')
   .showHelpOnFail(false, 'Specify --help for available options')
-  .alias('help', 'h')
   .version('version', 'Show the version number', `Version ${VERSION}`)
   .alias('version', 'v')
+  .wrap(EyesStorybookUtils.windowWidth())
   .options({
     conf: {
-      alias: 'c',
-      description: 'Path to configuration file',
-      requiresArg: true,
+      alias: 'f',
+      description: 'Path to Applitools configuration file',
       default: DEFAULT_CONFIG_PATH,
+      requiresArg: true,
+      string: true,
     },
-    exitcode: {
-      alias: 'e',
-      description: 'If tests failed close with non-zero exit code',
+
+    // build-storybook options
+    'static-dir': {
+      alias: 's',
+      description: 'Directory where to load static files from, comma-separated list',
+      requiresArg: true,
+      string: true,
+    },
+    'output-dir': {
+      alias: 'o',
+      description: 'Directory where to store built files',
+      requiresArg: true,
+      string: true,
+    },
+    'config-dir': {
+      alias: 'c',
+      description: 'Directory where to load Storybook configurations from',
+      requiresArg: true,
+      string: true,
+    },
+
+    // storybook options
+    port: {
+      alias: 'p',
+      description: 'Port to run Storybook',
+      requiresArg: true,
+      number: true,
+    },
+    host: {
+      alias: 'h',
+      description: 'Host to run Storybook',
+      requiresArg: true,
+      string: true,
+    },
+
+    // eyes-storybook options
+    local: {
+      alias: 'l',
+      description: 'Force to use Selenium mode',
       requiresArg: false,
       boolean: true,
     },
@@ -45,15 +82,16 @@ const yargs = require('yargs')
       requiresArg: false,
       boolean: true,
     },
-    local: {
-      alias: 'l',
-      description: 'Force to use Selenium mode',
+    'skip-build': {
+      description: 'Disable building Storybook before testing',
       requiresArg: false,
       boolean: true,
     },
-    'skip-build': {
-      alias: 's',
-      description: 'Disable building Storybook app before testing',
+
+    // general
+    exitcode: {
+      alias: 'e',
+      description: 'If tests failed close with non-zero exit code',
       requiresArg: false,
       boolean: true,
     },
@@ -82,12 +120,12 @@ const yargs = require('yargs')
 /* --- Load configuration from config file --- */
 let configs;
 console.log(`Used eyes.storybook of version ${VERSION}.`);
-const configsPath = path.resolve(process.cwd(), yargs.conf);
+const configsPath = path.resolve(process.cwd(), cliOptions.conf);
 if (fs.existsSync(configsPath)) {
   const userDefinedConfig = require(configsPath); // eslint-disable-line import/no-dynamic-require
   configs = Object.assign(defaultConfig, userDefinedConfig);
   console.log(`Configuration was loaded from "${configsPath}".`);
-} else if (yargs.conf !== DEFAULT_CONFIG_PATH) {
+} else if (cliOptions.conf !== DEFAULT_CONFIG_PATH) {
   throw new Error(`Configuration file cannot be found in "${configsPath}".`);
 } else {
   console.log('No configuration file found. Use default.');
@@ -96,14 +134,14 @@ if (fs.existsSync(configsPath)) {
 
 
 // Set log level according to specified CLI options
-if (yargs.debug) {
+if (cliOptions.debug) {
   configs.showLogs = 'verbose';
   configs.showEyesSdkLogs = 'verbose';
   configs.showStorybookOutput = true;
-} else if (yargs.verbose) {
+} else if (cliOptions.verbose) {
   configs.showLogs = 'verbose';
   configs.showEyesSdkLogs = true;
-} else if (yargs.info) {
+} else if (cliOptions.info) {
   configs.showLogs = true;
 }
 
@@ -117,11 +155,26 @@ if (configs.showLogs) {
 
 
 /* --- Validating configuration --- */
-if (yargs.local) {
+if (cliOptions.staticDir) {
+  configs.storybookStaticDir = cliOptions.staticDir;
+}
+if (cliOptions.outputDir) {
+  configs.storybookOutputDir = cliOptions.outputDir;
+}
+if (cliOptions.configDir) {
+  configs.storybookConfigDir = cliOptions.configDir;
+}
+if (cliOptions.port) {
+  configs.storybookPort = cliOptions.port;
+}
+if (cliOptions.host) {
+  configs.storybookHost = cliOptions.host;
+}
+if (cliOptions.local) {
   configs.useSelenium = true;
   logger.verbose('Forced Selenium mode, due to --local option.');
 }
-if (yargs.skipBuild) {
+if (cliOptions.skipBuild) {
   configs.skipStorybookBuild = true;
   logger.verbose('Build Storybook skipped, due to --skip-build option.');
 }
@@ -164,7 +217,7 @@ if (configs.useSelenium) { // local mode rules
   if (Array.isArray(configs.capabilities.browserName)) {
     throw new Error('browserName should be single item, array is not supported in Browser (local) mode.');
   }
-} else if (yargs.legacy) { // remote (legacy) mode rules
+} else if (cliOptions.legacy) { // remote (legacy) mode rules
   if (Array.isArray(configs.capabilities.browserName)) {
     throw new Error('browserName should be single item, array is not supported in VisualGrid-legacy mode.');
   }
@@ -223,7 +276,7 @@ return promiseFactory.resolve()
     }
 
     // eslint-disable-next-line max-len
-    const { EyesVisualGridRunner } = yargs.legacy ? require('../lib/EyesVisualGridLegacyRunner') : require('../lib/EyesVisualGridRunner');
+    const { EyesVisualGridRunner } = cliOptions.legacy ? require('../lib/EyesVisualGridLegacyRunner') : require('../lib/EyesVisualGridRunner');
     testRunner = new EyesVisualGridRunner(logger, promiseFactory, configs);
 
     const spinner = ora('Building Storybook');
@@ -273,11 +326,11 @@ return promiseFactory.resolve()
       EyesStorybookUtils.writeFile(path.resolve(process.cwd(), configs.tapFilePath), resultsFormatter.asHierarchicTAPString(false, true));
     }
 
-    process.exit(yargs.exitcode ? exitCode : 0);
+    process.exit(cliOptions.exitcode ? exitCode : 0);
   })
   .catch(err => {
     console.error(err);
-    if (!yargs.debug) {
+    if (!cliOptions.debug) {
       console.log('Run with `--debug` flag to see more logs.');
     }
 

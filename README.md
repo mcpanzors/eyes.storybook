@@ -169,15 +169,21 @@ Below you can see output of the `--help` option.
 Usage: eyes-storybook [options]
 
 Options:
-  --help, -h        Show help                                          [boolean]
-  --version, -v     Show the version number                            [boolean]
-  --conf, -c        Path to configuration file [default: "applitools.config.js"]
-  --exitcode, -e    If tests failed close with non-zero exit code      [boolean]
-  --local, -l       Force to use Selenium mode                         [boolean]
-  --skip-build, -s  Disable building Storybook app before testing      [boolean]
-  --info, -d        Display info about current running story           [boolean]
-  --verbose, --dd   Display data about current running method          [boolean]
-  --debug, --ddd    Display all possible logs and debug information    [boolean]
+  --help            Show help                                                              [boolean]
+  --version, -v     Show the version number                                                [boolean]
+  --conf, -f        Path to Applitools configuration file [string] [default: "applitools.config.js"]
+  --static-dir, -s  Directory where to load static files from, comma-separated list         [string]
+  --output-dir, -o  Directory where to store built files                                    [string]
+  --config-dir, -c  Directory where to load Storybook configurations from                   [string]
+  --port, -p        Port to run Storybook                                                   [number]
+  --host, -h        Host to run Storybook                                                   [string]
+  --local, -l       Force to use Selenium mode                                             [boolean]
+  --legacy          Use old implementation of VisualGrid test runner                       [boolean]
+  --skip-build      Disable building Storybook before testing                              [boolean]
+  --exitcode, -e    If tests failed close with non-zero exit code                          [boolean]
+  --info, -d        Display info about current running story                               [boolean]
+  --verbose, --dd   Display data about current running method                              [boolean]
+  --debug, --ddd    Display all possible logs and debug information                        [boolean]
 ```
 
 ### Custom build process or independent server

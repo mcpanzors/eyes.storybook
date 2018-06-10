@@ -4,6 +4,7 @@
 
 /* eslint-disable no-console, global-require */
 const fs = require('fs');
+const yargs = require('yargs');
 const path = require('path');
 const chalk = require('chalk');
 
@@ -17,19 +18,25 @@ const DEFAULT_CONFIG_PATH = 'applitools.config.js';
 const SUPPORTED_STORYBOOK_APPS = ['react', 'vue', 'react-native', 'angular', 'polymer'];
 
 /* --- Create CLI --- */
-const yargs = require('yargs')
-  .usage('Usage: $0 [options]')
+const cliOptions = yargs.usage('Usage: $0 [options]')
   .epilogue('Check our documentation here: https://applitools.com/resources/tutorial')
   .showHelpOnFail(false, 'Specify --help for available options')
-  .alias('help', 'h')
   .version('version', 'Show the version number', `Version ${VERSION}`)
   .alias('version', 'v')
+  .wrap(EyesStorybookUtils.windowWidth())
   .options({
     conf: {
-      alias: 'c',
-      description: 'Path to configuration file',
-      requiresArg: true,
+      alias: 'f',
+      description: 'Path to Applitools configuration file',
       default: DEFAULT_CONFIG_PATH,
+      requiresArg: true,
+      string: true,
+    },
+    'config-dir': {
+      alias: 'c',
+      description: 'Directory where to load Storybook configurations from',
+      requiresArg: true,
+      string: true,
     },
     debug: {
       alias: 'd',
@@ -44,12 +51,12 @@ const yargs = require('yargs')
 /* --- Load configuration from config file --- */
 let configs;
 console.log(`Used eyes.storybook of version ${VERSION}.`);
-const configsPath = path.resolve(process.cwd(), yargs.conf);
+const configsPath = path.resolve(process.cwd(), cliOptions.conf);
 if (fs.existsSync(configsPath)) {
   const userDefinedConfig = require(configsPath); // eslint-disable-line import/no-dynamic-require
   configs = Object.assign(defaultConfig, userDefinedConfig);
   console.log(`Configuration was loaded from "${configsPath}".`);
-} else if (yargs.conf !== DEFAULT_CONFIG_PATH) {
+} else if (cliOptions.conf !== DEFAULT_CONFIG_PATH) {
   throw new Error(`Configuration file cannot be found in "${configsPath}".`);
 } else {
   console.log('No configuration file found. Use default.');
@@ -60,12 +67,16 @@ if (fs.existsSync(configsPath)) {
 /* --- Init common interfaces --- */
 const promiseFactory = new PromiseFactory(asyncAction => new Promise(asyncAction));
 const logger = new Logger();
-if (yargs.debug) {
+if (cliOptions.debug) {
   logger.setLogHandler(new ConsoleLogHandler(true));
 }
 
 
 /* --- Validating configuration --- */
+if (cliOptions.configDir) {
+  configs.storybookConfigDir = cliOptions.configDir;
+}
+
 if (configs.storybookApp && !SUPPORTED_STORYBOOK_APPS.includes(configs.storybookApp)) {
   throw new Error(`storybookApp should be one of [${SUPPORTED_STORYBOOK_APPS}].`);
 }

@@ -5,6 +5,7 @@
 - `chromedriver` dependency is not mandatory for Browser (local) mode, if you already have WebDriver in your PATH, you can skip this dependency.
 - In VisualGrid (remote) mode, you can set multiple browsers in `capabilities`.`browserName` property. Tests will be preformed on all of them.
 - Added `eyes-setup` script which allows automatically update Storybook's config (It adds code which exports Storybook to `window` object).
+- Added new options `--config-dir`, `--static-dir`, `--output-dir`, `--host`, `--port`, to have similar options like Storybook has.
 
 ### Bug Fixes
 - Close WebDriver when all tests completed in Browser (local) mode
@@ -12,6 +13,7 @@
 ### BREAKING CHANGES
 - Changed default value of `viewportSize` property. Now only one size (800x600) will be used.
 - Execution of `eyes-storybook` will run `build-storybook` by default. Also `--build` option is removed and new option `--skip-build` added.
+- Replaced next aliases from options `-h` is now belongs to `--host` instead of `--help`, `-c` belongs to `--config-dir` instead of `--conf`.
 
 ## [1.6.1](https://github.com/applitools/eyes.storybook/compare/v1.6.0...v1.6.1) - 2018-06-05
 ### Bug Fixes
