@@ -89,7 +89,8 @@ module.exports = {
     /* Only for VisualGrid mode */
 
     // `skipStorybookBuild` defines whether or not will be run `build-storybook` command.
-    skipStorybookBuild: false, // if you use your custom build command, set this to `true`
+    skipStorybookBuild: true, // if you don't use custom build command, we can do that for you,
+                              // just set this to `false` and we will run `build-storybook` every time
 
     // `storybookOutputDir` defines directory where to store built files.
     // The value will be passed to Storybook via `--output-dir` option
@@ -179,7 +180,7 @@ Options:
   --host, -h        Host to run Storybook                                                   [string]
   --local, -l       Force to use Selenium mode                                             [boolean]
   --legacy          Use old implementation of VisualGrid test runner                       [boolean]
-  --skip-build      Disable building Storybook before testing                              [boolean]
+  --build           Enable building Storybook before testing                               [boolean]
   --exitcode, -e    If tests failed close with non-zero exit code                          [boolean]
   --info, -d        Display info about current running story                               [boolean]
   --verbose, --dd   Display data about current running method                              [boolean]

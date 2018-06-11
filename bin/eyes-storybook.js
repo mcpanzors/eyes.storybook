@@ -82,8 +82,9 @@ const cliOptions = yargs.usage('Usage: $0 [options]')
       requiresArg: false,
       boolean: true,
     },
-    'skip-build': {
-      description: 'Disable building Storybook before testing',
+    build: {
+      alias: 'b',
+      description: 'Enable building Storybook before testing',
       requiresArg: false,
       boolean: true,
     },
@@ -174,9 +175,9 @@ if (cliOptions.local) {
   configs.useSelenium = true;
   logger.verbose('Forced Selenium mode, due to --local option.');
 }
-if (cliOptions.skipBuild) {
-  configs.skipStorybookBuild = true;
-  logger.verbose('Build Storybook skipped, due to --skip-build option.');
+if (cliOptions.build) {
+  configs.skipStorybookBuild = false;
+  logger.verbose('Forced Storybook build, due to --build option.');
 }
 if (!configs.apiKey) {
   console.info(chalk.red('\nEnvironment variable APPLITOOLS_API_KEY is not set.'));
