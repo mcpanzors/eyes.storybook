@@ -12,16 +12,22 @@ Install eyes.storybook as a local dev dependency in your tested project:
 
     npm install --save-dev @applitools/eyes.storybook
 
-Open your package.json, and add a script:
-
-    "eyes-storybook": "eyes-storybook"
-
 ### Usage
 
-When your project is setup, you can run a test with the following command:
+Before running your project's build, you should run:
 
 ```
-$ npm run eyes-storybook
+$ npx eyes-setup
+```
+
+The above command will update your .storybook/config.js so that the Eyes Storybook SDK can automatically grab stories to test.
+
+You should then run your project's build (e.g, ```npm run build```)
+
+Now you can run visual tests for all your stories using the following command:
+
+```
+$ npx eyes-storybook
 ```
 
 ### Advanced configuration
@@ -174,7 +180,7 @@ Options:
   --version, -v     Show the version number                                                [boolean]
   --conf, -f        Path to Applitools configuration file [string] [default: "applitools.config.js"]
   --static-dir, -s  Directory where to load static files from, comma-separated list         [string]
-  --output-dir, -o  Directory where to store built files                                    [string]
+  --output-dir, -o  Directory where the built result files are stored                       [string]
   --config-dir, -c  Directory where to load Storybook configurations from                   [string]
   --port, -p        Port to run Storybook                                                   [number]
   --host, -h        Host to run Storybook                                                   [string]
@@ -187,23 +193,42 @@ Options:
   --debug, --ddd    Display all possible logs and debug information                        [boolean]
 ```
 
-### Custom build process or independent server
+### Independent Storybook Server
 
 If you would like to run Storybook server out of the `eyes-storybook` execution, you should specify `storybookUrl` option in your `applitools.config.js` file and update Storybook's config file according to rules below.
- 
-Rules below also applicable, if you would like to disable execution of `build-storybook` command during `eys-storybook` (to do that you can use `--skip-build` option (or add option to `applitools.config.js`)).
+
+### Automatic Build
+
+If you would Eyes storybook to to automatically run `build-storybook` command when it is run, you can use the `--build` parameter to the `eyes-storybook` command.
+
+### 'eyes-setup'
+
+The ```eyes-setup``` command updates your .storybook/config.js file to include the following lines:
+
+```
+if (typeof window === 'object' && window.navigator && (/node\.js/i).test(window.navigator.userAgent)) {
+  let addons = require('@storybook/addons').default;
+  let Channel = require('@storybook/channels').default;
+  addons.setChannel(new Channel({
+    transport: {
+      setHandler: function() {},
+      send: function() {}
+    }
+  }));
+}
+```
+at the beggining of the file and
+
+```
+if (typeof window === 'object') {
+  window.__storybook_stories__ = require('@storybook/react').getStorybook();
+}
+```
+at the end.
+
+Inserting these lines manually to your config.js file is the same as using the ```eyes-setup``` command.
 
 To access list of stories we need a way to access Storybook from browser. Please add lines below to Storybook's config file (default path is `.storybook/config.js`).
-
-This process also can be done automatically by using `eyes-setup` script.
-
-**Storybook v2:**
-
-    if (typeof window === 'object') window.__storybook_stories__ = require('@kadira/storybook').getStorybook();
-
-**Storybook v3** (for Vue, Angular and others, just replace @storybook/react according to yours):
-
-    if (typeof window === 'object') window.__storybook_stories__ = require('@storybook/react').getStorybook();
 
 ---
 
