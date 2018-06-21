@@ -49,14 +49,14 @@
     "@applitools/eyes.sdk.core": "~1.6.2",
     "axios": "^0.18.0",
     "chalk": "^2.4.1",
-    "jsdom": "^11.10.0",
+    "jsdom": "^11.11.0",
     "mime-types": "^2.1.18",
     "ora": "^2.1.0",
     "yargs": "^11.1.0"
   },
   "devDependencies": {
     "selenium-webdriver": "^3.6.0",
-    "chromedriver": "^2.38.3"
+    "chromedriver": "^2.40.0"
   },
   "license": "Apache-2.0",
   "engines": {
