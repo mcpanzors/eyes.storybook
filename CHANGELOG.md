@@ -1,18 +1,24 @@
 # Changelog
 
-## [Unreleased](https://github.com/applitools/eyes.storybook/compare/v1.6.1...HEAD)
+## [Unreleased](https://github.com/applitools/eyes.storybook/compare/v1.7.0...HEAD)
 ### Features
-- `chromedriver` dependency is not mandatory for Browser (local) mode, if you already have WebDriver in your PATH, you can skip this dependency.
-- In VisualGrid (remote) mode, you can set multiple browsers in `capabilities`.`browserName` property. Tests will be preformed on all of them.
-- Added `eyes-setup` script which allows automatically update Storybook's config (It adds code which exports Storybook to `window` object).
-- Added new options `--config-dir`, `--static-dir`, `--output-dir`, `--host`, `--port`, to have similar options like Storybook has.
+- Added output of logs from internal `build-storybook` execution
+- Added prefix to logs from `build-storybook` or `start-storybook` when they display to general log channel
+- Updated dependencies
+
+## [1.7.0](https://github.com/applitools/eyes.storybook/compare/v1.6.1...v1.7.0) - 2018-06-11
+### Features
+- `chromedriver` dependency is not mandatory for Browser (local) mode, if you already have WebDriver in your PATH, you can skip this dependency
+- In VisualGrid (remote) mode, you can set multiple browsers in `capabilities`.`browserName` property. Tests will be preformed on all of them
+- Added `eyes-setup` script which allows automatically update Storybook's config (It adds code which exports Storybook to `window` object)
+- Added new options `--config-dir`, `--static-dir`, `--output-dir`, `--host`, `--port`, to have similar options like Storybook has
 
 ### Bug Fixes
 - Close WebDriver when all tests completed in Browser (local) mode
 
 ### BREAKING CHANGES
-- Changed default value of `viewportSize` property. Now only one size (800x600) will be used.
-- Replaced next aliases from options `-h` is now belongs to `--host` instead of `--help`, `-c` belongs to `--config-dir` instead of `--conf`.
+- Changed default value of `viewportSize` property. Now only one size (800x600) will be used
+- Replaced next aliases from options `-h` is now belongs to `--host` instead of `--help`, `-c` belongs to `--config-dir` instead of `--conf`
 
 ## [1.6.1](https://github.com/applitools/eyes.storybook/compare/v1.6.0...v1.6.1) - 2018-06-05
 ### Bug Fixes
@@ -21,9 +27,9 @@
 
 ## [1.6.0](https://github.com/applitools/eyes.storybook/compare/v1.5.0...v1.6.0) - 2018-05-24
 ### BREAKING CHANGES
-- Renamed `useVisualGrid` config property to `useSelenium` (inverted). Default mode not changed.
-- Renamed `storybookAddress` and `seleniumAddress` config properties to `storybookUrl` and `seleniumUrl` accordingly.
-- `Browser mode` is renamed to `Selenium mode`. Renamed Browser classes to Selenium, Rendering to VisualGrid.
+- Renamed `useVisualGrid` config property to `useSelenium` (inverted). Default mode not changed
+- Renamed `storybookAddress` and `seleniumAddress` config properties to `storybookUrl` and `seleniumUrl` accordingly
+- `Browser mode` is renamed to `Selenium mode`. Renamed Browser classes to Selenium, Rendering to VisualGrid
 - `selenium-webdriver` and `chromedriver` modules were removed from dependencies. If you would like to use Selenium mode, you need to install them manually
 - Use bulk `/render` and `/render-status` requests to VisualGrid, no concurrency limit (if for some reason you want to use old one, add `--legacy` option)
 
