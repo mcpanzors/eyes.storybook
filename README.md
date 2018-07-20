@@ -217,7 +217,7 @@ if (typeof window === 'object' && window.navigator && (/node\.js/i).test(window.
   }));
 }
 ```
-at the beggining of the file and
+at the beginning of the file and
 
 ```
 if (typeof window === 'object') {
