@@ -57,7 +57,9 @@ module.exports = {
 
     // `appName` is your application name that will be shown in test results
     appName: undefined, // as default used your package name from package.json
-
+    // `batchName` is used as an identifier for your run in applitools.
+    // Unlike appName, this is not used to correlate individual tests
+    batchName: undefined, // when unset, it uses appName.
     // `viewportSize` is the required browser's viewport size or a list of sizes. It can be
     // an array of objects or a single object, e.g. {width: 800, height: 600}
     viewportSize: [
